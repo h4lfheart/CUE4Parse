@@ -181,8 +181,8 @@ public class UnrealModel : UnrealFormatExport
                 var socket = socketObject.Load<USkeletalMeshSocket>();
                 if (socket is null) continue;
 
-                Ar.WriteFString(socket.SocketName.Text);
-                Ar.WriteFString(socket.BoneName.Text);
+                socketChunk.WriteFString(socket.SocketName.Text);
+                socketChunk.WriteFString(socket.BoneName.Text);
             
                 var bonePos = socket.RelativeLocation;
                 bonePos.Y = -bonePos.Y;
