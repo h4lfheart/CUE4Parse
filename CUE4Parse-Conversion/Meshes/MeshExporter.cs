@@ -12,6 +12,7 @@ using CUE4Parse.UE4.Writers;
 using CUE4Parse_Conversion.ActorX;
 using CUE4Parse_Conversion.Materials;
 using CUE4Parse_Conversion.Meshes.PSK;
+using CUE4Parse_Conversion.Meshes.UnrealFormat;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.Utils;
 using Serilog;
@@ -79,6 +80,10 @@ namespace CUE4Parse_Conversion.Meshes
                         ext = "obj";
                         new Gltf(ExportName, lod, materialExports, Options).Save(Options.MeshFormat, Ar);
                         break;
+                    case EMeshFormat.UnrealFormat:
+                        ext = "umodel";
+                        new UnrealModel(lod, originalMesh.Name, Options).Save(Ar);
+                        break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(Options.MeshFormat), Options.MeshFormat, null);
                 }
@@ -144,6 +149,10 @@ namespace CUE4Parse_Conversion.Meshes
                     case EMeshFormat.OBJ:
                         ext = "obj";
                         new Gltf(ExportName, lod, convertedMesh.RefSkeleton, materialExports, Options).Save(Options.MeshFormat, Ar);
+                        break;
+                    case EMeshFormat.UnrealFormat:
+                        ext = "umodel";
+                        new UnrealModel(lod, originalMesh.Name, convertedMesh.RefSkeleton, originalMesh.MorphTargets, totalSockets.ToArray(), lodIndex, Options).Save(Ar);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(Options.MeshFormat), Options.MeshFormat, null);

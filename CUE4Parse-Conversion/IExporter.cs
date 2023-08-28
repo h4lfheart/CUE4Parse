@@ -11,6 +11,7 @@ using CUE4Parse_Conversion.Animations;
 using CUE4Parse_Conversion.Materials;
 using CUE4Parse_Conversion.Meshes;
 using CUE4Parse_Conversion.Textures;
+using CUE4Parse_Conversion.UnrealFormat;
 
 namespace CUE4Parse_Conversion
 {
@@ -22,6 +23,7 @@ namespace CUE4Parse_Conversion
         public ETextureFormat TextureFormat;
         public ETexturePlatform Platform;
         public ESocketFormat SocketFormat;
+        public EFileCompressionFormat CompressionFormat;
         public bool ExportMorphTargets;
         public bool ExportMaterials;
 
@@ -33,6 +35,7 @@ namespace CUE4Parse_Conversion
             TextureFormat = ETextureFormat.Png;
             Platform = ETexturePlatform.DesktopMobile;
             SocketFormat = ESocketFormat.Bone;
+            CompressionFormat = EFileCompressionFormat.None;
             ExportMorphTargets = true;
             ExportMaterials = true;
         }
