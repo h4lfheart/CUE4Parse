@@ -105,6 +105,8 @@ public class UnrealModel : UnrealFormatExport
             {
                 var materialName = section.Material?.Load<UMaterialInterface>()?.Name ?? string.Empty;
                 materialChunk.WriteFString(materialName);
+                materialChunk.Write(section.FirstIndex);
+                materialChunk.Write(section.NumFaces);
             }
 
             materialChunk.Serialize(Ar);
