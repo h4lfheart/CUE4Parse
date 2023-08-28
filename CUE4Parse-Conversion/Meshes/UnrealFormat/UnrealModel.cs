@@ -59,12 +59,20 @@ public class UnrealModel : UnrealFormatExport
         
         using (var texCoordsChunk = new FDataChunk("TEXCOORDS"))
         {
-            texCoordsChunk.WriteArray(mainUVs, uv => uv.Serialize(texCoordsChunk));
+            texCoordsChunk.WriteArray(mainUVs, uv =>
+            {
+                uv.V = -uv.V;
+                uv.Serialize(texCoordsChunk);
+            });
             texCoordsChunk.Count++;
             
             foreach (var extraUVSet in extraUVs)
             {
-                texCoordsChunk.WriteArray(extraUVSet, uv => uv.Serialize(texCoordsChunk));
+                texCoordsChunk.WriteArray(extraUVSet, uv => 
+                {
+                    uv.V = -uv.V;
+                    uv.Serialize(texCoordsChunk);
+                });
                 texCoordsChunk.Count++;
             }
             

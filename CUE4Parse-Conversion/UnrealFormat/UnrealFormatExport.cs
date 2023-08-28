@@ -12,14 +12,14 @@ public abstract class UnrealFormatExport
     private string ObjectName;
     private ExporterOptions Options;
     
+    private const int ZSTD_LEVEL = 6;
+    
     protected UnrealFormatExport(string name, ExporterOptions options)
     {
         ObjectName = name;
         Options = options;
     }
 
-    private const int ZSTD_LEVEL = 6;
-    
     public void Save(FArchiveWriter archive)
     {
         var header = new FUnrealFormatHeader(Identifier, ObjectName, Options.CompressionFormat);
