@@ -23,7 +23,7 @@ public class FMorphTarget : ISerializable
     public void Serialize(FArchiveWriter Ar)
     {
         MorphName.Serialize(Ar);
-        Ar.WriteList(MorphData);
+        Ar.WriteArray(MorphData);
     }
 }
 

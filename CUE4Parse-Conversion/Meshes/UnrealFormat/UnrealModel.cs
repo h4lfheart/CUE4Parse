@@ -6,6 +6,7 @@ using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse_Conversion.Meshes.UnrealFormat;
@@ -16,21 +17,22 @@ public class UnrealModel : UnrealFormatExport
     
     public UnrealModel(CStaticMeshLod lod, string name, ExporterOptions options) : base(name, options) 
     {
-        SerializeStaticMeshData(lod.Verts, lod.Indices.Value, lod.VertexColors, lod.Sections.Value);
+        SerializeStaticMeshData(lod.Verts, lod.Indices.Value, lod.VertexColors, lod.Sections.Value, lod.ExtraUV.Value);
     }
     
     public UnrealModel(CSkelMeshLod lod, string name, List<CSkelMeshBone> bones, FPackageIndex[]? morphTargets, FPackageIndex[] sockets, int lodIndex, ExporterOptions options) : base(name, options)
     {
-        SerializeStaticMeshData(lod.Verts, lod.Indices.Value, lod.VertexColors, lod.Sections.Value);
+        SerializeStaticMeshData(lod.Verts, lod.Indices.Value, lod.VertexColors, lod.Sections.Value, lod.ExtraUV.Value);
         SerializeSkeletalMeshData(lod.Verts, bones, morphTargets, sockets, lodIndex);
     }
 
-    private void SerializeStaticMeshData(IReadOnlyCollection<CMeshVertex> verts, FRawStaticIndexBuffer indices, FColor[]? vertexColors, CMeshSection[] sections)
+    private void SerializeStaticMeshData(IReadOnlyCollection<CMeshVertex> verts, FRawStaticIndexBuffer indices, FColor[]? vertexColors, CMeshSection[] sections, FMeshUVFloat[][] extraUVs)
     {
         using var vertexChunk = new FDataChunk("VERTICES", verts.Count);
         using var normalsChunk = new FDataChunk("NORMALS", verts.Count);
         using var tangentsChunk = new FDataChunk("TANGENTS", verts.Count);
-        using var texCoordsChunk = new FDataChunk("TEXCOORDS", verts.Count);
+
+        var mainUVs = new List<FMeshUVFloat>();
         foreach (var vert in verts)
         {
             var position = vert.Position;
@@ -48,14 +50,26 @@ public class UnrealModel : UnrealFormatExport
             tangent.Serialize(tangentsChunk);
             
             var uv = vert.UV;
-            uv.V = -uv.V;
-            uv.Serialize(texCoordsChunk);
+            mainUVs.Add(uv);
         }
         
         vertexChunk.Serialize(Ar);
         normalsChunk.Serialize(Ar);
         tangentsChunk.Serialize(Ar);
-        texCoordsChunk.Serialize(Ar);
+        
+        using (var texCoordsChunk = new FDataChunk("TEXCOORDS"))
+        {
+            texCoordsChunk.WriteArray(mainUVs, uv => uv.Serialize(texCoordsChunk));
+            texCoordsChunk.Count++;
+            
+            foreach (var extraUVSet in extraUVs)
+            {
+                texCoordsChunk.WriteArray(extraUVSet, uv => uv.Serialize(texCoordsChunk));
+                texCoordsChunk.Count++;
+            }
+            
+            texCoordsChunk.Serialize(Ar);
+        }
         
         using (var indexChunk = new FDataChunk("INDICES", indices.Length))
         {
