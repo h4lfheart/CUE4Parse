@@ -7,33 +7,34 @@ namespace CUE4Parse_Conversion.UnrealFormat;
 
 public abstract class UnrealFormatExport
 {
-    protected string Identifier = string.Empty;
+    protected virtual string Identifier { get; set; }
     protected readonly FArchiveWriter Ar = new();
-    protected FUnrealFormatHeader Header;
-    protected ExporterOptions Options;
+    private string ObjectName;
+    private ExporterOptions Options;
     
     protected UnrealFormatExport(string name, ExporterOptions options)
     {
+        ObjectName = name;
         Options = options;
-        Header = new FUnrealFormatHeader(Identifier, name, Options.CompressionFormat);
     }
 
     private const int ZSTD_LEVEL = 6;
     
     public void Save(FArchiveWriter archive)
     {
+        var header = new FUnrealFormatHeader(Identifier, ObjectName, Options.CompressionFormat);
         var data = Ar.GetBuffer();
-        Header.UncompressedSize = data.Length;
+        header.UncompressedSize = data.Length;
         
-        var compressedData = Header.CompressionFormat switch
+        var compressedData = header.CompressionFormat switch
         {
             EFileCompressionFormat.GZIP => GZipStream.CompressBuffer(data),
             EFileCompressionFormat.ZSTD => new Compressor(ZSTD_LEVEL).Wrap(data),
             _ => data
         };
-        Header.CompressedSize = compressedData.Length;
+        header.CompressedSize = compressedData.Length;
         
-        Header.Serialize(archive);
+        header.Serialize(archive);
         archive.Write(compressedData);
     }
     

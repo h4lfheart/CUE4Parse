@@ -13,7 +13,7 @@ namespace CUE4Parse_Conversion.Meshes.UnrealFormat;
 
 public class UnrealModel : UnrealFormatExport
 {
-    protected new string Identifier = "UMODEL";
+    protected override string Identifier { get; set; } = "UMODEL";
     
     public UnrealModel(CStaticMeshLod lod, string name, ExporterOptions options) : base(name, options) 
     {
