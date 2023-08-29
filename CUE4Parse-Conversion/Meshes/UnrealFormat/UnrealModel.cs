@@ -61,7 +61,7 @@ public class UnrealModel : UnrealFormatExport
         {
             texCoordsChunk.WriteArray(mainUVs, uv =>
             {
-                uv.V = -uv.V;
+                uv.V = 1-uv.V;
                 uv.Serialize(texCoordsChunk);
             });
             texCoordsChunk.Count++;
@@ -70,7 +70,7 @@ public class UnrealModel : UnrealFormatExport
             {
                 texCoordsChunk.WriteArray(extraUVSet, uv => 
                 {
-                    uv.V = -uv.V;
+                    uv.V = 1-uv.V;
                     uv.Serialize(texCoordsChunk);
                 });
                 texCoordsChunk.Count++;
