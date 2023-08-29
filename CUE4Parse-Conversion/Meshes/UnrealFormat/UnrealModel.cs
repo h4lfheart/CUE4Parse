@@ -188,8 +188,9 @@ public class UnrealModel : UnrealFormatExport
                 bonePos.Y = -bonePos.Y;
                 bonePos.Serialize(socketChunk);
 
-                var boneRot = socket.RelativeRotation;
-                boneRot.Yaw = -boneRot.Yaw;
+                var boneRot = socket.RelativeRotation.Quaternion();
+                boneRot.Y = -boneRot.Y;
+                boneRot.W = -boneRot.W;
                 boneRot.Serialize(socketChunk);
             
                 var boneScale = socket.RelativeScale;
