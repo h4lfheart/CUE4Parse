@@ -34,13 +34,28 @@ namespace CUE4Parse_Conversion.Meshes
             }
 
             using var Ar = new FArchiveWriter();
+            
+            string ext;
+            switch (Options.MeshFormat)
+            {
+                case EMeshFormat.ActorX:
+                    ext = "pskx";
+                    
+                    var mainHdr = new VChunkHeader { TypeFlag = Constants.PSK_VERSION };
+                    Ar.SerializeChunkHeader(mainHdr, "ACTRHEAD");
+                    ExportSkeletalSockets(Ar, originalSkeleton.Sockets, bones);
+                    ExportSkeletonData(Ar, bones);
+                    break;
+                case EMeshFormat.UnrealFormat:
+                    ext = "uemodel";
+                    new UnrealModel(originalSkeleton.Name, bones, originalSkeleton.Sockets, Options).Save(Ar);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(Options.MeshFormat), Options.MeshFormat, null);
+            }
+            
 
-            var mainHdr = new VChunkHeader { TypeFlag = Constants.PSK_VERSION };
-            Ar.SerializeChunkHeader(mainHdr, "ACTRHEAD");
-            ExportSkeletalSockets(Ar, originalSkeleton.Sockets, bones);
-            ExportSkeletonData(Ar, bones);
-
-            MeshLods.Add(new Mesh($"{PackagePath}.psk", Ar.GetBuffer(), new List<MaterialExporter2>()));
+            MeshLods.Add(new Mesh($"{PackagePath}.{ext}", Ar.GetBuffer(), new List<MaterialExporter2>()));
         }
 
         public MeshExporter(UStaticMesh originalMesh, ExporterOptions options) : base(originalMesh, options)

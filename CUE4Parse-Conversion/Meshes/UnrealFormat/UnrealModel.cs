@@ -23,7 +23,13 @@ public class UnrealModel : UnrealFormatExport
     public UnrealModel(CSkelMeshLod lod, string name, List<CSkelMeshBone> bones, FPackageIndex[]? morphTargets, FPackageIndex[] sockets, int lodIndex, ExporterOptions options) : base(name, options)
     {
         SerializeStaticMeshData(lod.Verts, lod.Indices.Value, lod.VertexColors, lod.Sections.Value, lod.ExtraUV.Value);
-        SerializeSkeletalMeshData(lod.Verts, bones, morphTargets, sockets, lodIndex);
+        SerializeSkeletalMeshData(lod.Verts, morphTargets, lodIndex);
+        SerializeSkeletonData(bones, sockets);
+    }
+    
+    public UnrealModel(string name, List<CSkelMeshBone> bones, FPackageIndex[] sockets, ExporterOptions options) : base(name, options)
+    {
+        SerializeSkeletonData(bones, sockets);
     }
 
     private void SerializeStaticMeshData(IReadOnlyCollection<CMeshVertex> verts, FRawStaticIndexBuffer indices, FColor[]? vertexColors, CMeshSection[] sections, FMeshUVFloat[][] extraUVs)
@@ -113,7 +119,7 @@ public class UnrealModel : UnrealFormatExport
         }
     }
 
-    private void SerializeSkeletalMeshData(CSkelMeshVertex[] verts, List<CSkelMeshBone> bones, FPackageIndex[]? morphTargets, FPackageIndex[] sockets, int lodIndex)
+    private void SerializeSkeletalMeshData(CSkelMeshVertex[] verts, FPackageIndex[]? morphTargets, int lodIndex)
     {
         using (var weightsChunk = new FDataChunk("WEIGHTS"))
         {
@@ -152,7 +158,10 @@ public class UnrealModel : UnrealFormatExport
             }
             morphTargetsChunk.Serialize(Ar);
         }
-        
+    }
+
+    private void SerializeSkeletonData(List<CSkelMeshBone> bones, FPackageIndex[] sockets)
+    {
         using (var boneChunk = new FDataChunk("BONES", bones.Count))
         {
             foreach (var bone in bones)
@@ -200,7 +209,6 @@ public class UnrealModel : UnrealFormatExport
 
             socketChunk.Serialize(Ar);
         }
-
     }
-    
+
 }
