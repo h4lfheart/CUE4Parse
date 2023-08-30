@@ -7,6 +7,7 @@ using CUE4Parse.UE4.Writers;
 using CUE4Parse.Utils;
 using CUE4Parse_Conversion.ActorX;
 using CUE4Parse_Conversion.Animations.PSA;
+using CUE4Parse_Conversion.Animations.UnrealFormat;
 using CUE4Parse.UE4.Assets.Exports;
 
 namespace CUE4Parse_Conversion.Animations
@@ -23,9 +24,29 @@ namespace CUE4Parse_Conversion.Animations
         private AnimExporter(ExporterOptions options, UObject export, CAnimSet animSet)
             : this(export, options)
         {
-            for (int sequenceIndex = 0; sequenceIndex < animSet.Sequences.Count; sequenceIndex++)
+            for (var sequenceIndex = 0; sequenceIndex < animSet.Sequences.Count; sequenceIndex++)
             {
-                DoExportPsa(animSet, sequenceIndex);
+                using var Ar = new FArchiveWriter();
+            
+                string ext;
+                switch (Options.AnimationFormat)
+                {
+                    case EAnimationFormat.ActorX:
+                        ext = "psa";
+                        ExportAnimationActorX(Ar, animSet, sequenceIndex);
+                        break;
+                    case EAnimationFormat.UnrealFormat:
+                        ext = "ueanim";
+                        new UnrealAnim(export.Name, animSet, sequenceIndex, Options).Save(Ar);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(Options.MeshFormat), Options.MeshFormat, null);
+                }
+            
+
+                AnimSequences.Add(sequenceIndex > 0
+                    ? new Anim($"{PackagePath}_SEQ{sequenceIndex}.{ext}", Ar.GetBuffer())
+                    : new Anim($"{PackagePath}.{ext}", Ar.GetBuffer()));
             }
         }
 
@@ -51,10 +72,9 @@ namespace CUE4Parse_Conversion.Animations
         public AnimExporter(UAnimMontage animMontage, ExporterOptions options) : this(options, animMontage.Skeleton.Load<USkeleton>()!, animMontage) { }
         public AnimExporter(UAnimComposite animComposite, ExporterOptions options) : this(options, animComposite.Skeleton.Load<USkeleton>()!, animComposite) { }
 
-        private void DoExportPsa(CAnimSet anim, int seqIdx)
+        private void ExportAnimationActorX(FArchiveWriter Ar, CAnimSet anim, int seqIdx)
         {
-            var Ar = new FArchiveWriter();
-            var mainHdr = new VChunkHeader { TypeFlag = Constants.PSA_VERSION };
+             var mainHdr = new VChunkHeader { TypeFlag = Constants.PSA_VERSION };
             Ar.SerializeChunkHeader(mainHdr, "ANIMHEAD");
 
             var numBones = anim.Skeleton.BoneCount;
@@ -158,13 +178,6 @@ namespace CUE4Parse_Conversion.Animations
                     }
                 }
             }
-
-            // psa file is done
-            AnimSequences.Add(seqIdx > 0
-                ? new Anim($"{PackagePath}_SEQ{seqIdx}.psa", Ar.GetBuffer())
-                : new Anim($"{PackagePath}.psa", Ar.GetBuffer()));
-
-            Ar.Dispose();
         }
 
         public override bool TryWriteToDir(DirectoryInfo baseDirectory, out string label, out string savedFilePath)

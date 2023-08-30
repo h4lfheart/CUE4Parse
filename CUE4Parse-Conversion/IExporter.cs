@@ -24,6 +24,7 @@ namespace CUE4Parse_Conversion
         public ETexturePlatform Platform;
         public ESocketFormat SocketFormat;
         public EFileCompressionFormat CompressionFormat;
+        public EAnimationFormat AnimationFormat;
         public bool ExportMorphTargets;
         public bool ExportMaterials;
 
@@ -33,6 +34,7 @@ namespace CUE4Parse_Conversion
             MeshFormat = EMeshFormat.ActorX;
             MaterialFormat = EMaterialFormat.AllLayersNoRef;
             TextureFormat = ETextureFormat.Png;
+            AnimationFormat = EAnimationFormat.ActorX;
             Platform = ETexturePlatform.DesktopMobile;
             SocketFormat = ESocketFormat.Bone;
             CompressionFormat = EFileCompressionFormat.None;

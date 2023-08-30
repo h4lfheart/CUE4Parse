@@ -166,7 +166,7 @@ namespace CUE4Parse_Conversion.Meshes
                         new Gltf(ExportName, lod, convertedMesh.RefSkeleton, materialExports, Options).Save(Options.MeshFormat, Ar);
                         break;
                     case EMeshFormat.UnrealFormat:
-                        ext = "umodel";
+                        ext = "uemodel";
                         new UnrealModel(lod, originalMesh.Name, convertedMesh.RefSkeleton, originalMesh.MorphTargets, totalSockets.ToArray(), lodIndex, Options).Save(Ar);
                         break;
                     default:

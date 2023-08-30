@@ -10,7 +10,7 @@ namespace CUE4Parse_Conversion.Meshes
         Gltf2,
         [Description("Wavefront OBJ (Not Implemented)")]
         OBJ,
-        [Description("Unreal Format (umodel)")]
+        [Description("Unreal Format (uemodel)")]
         UnrealFormat
     }
 }
