@@ -6,6 +6,9 @@ namespace CUE4Parse_Conversion.Animations.UnrealFormat;
 
 public class UnrealAnim : UnrealFormatExport
 {
+    
+    protected override string Identifier { get; set; } = "UEANIM";
+    
     public UnrealAnim(string name, CAnimSet animSet, int sequenceIndex, ExporterOptions options) : base(name, options)
     {
         var sequence = animSet.Sequences[sequenceIndex];
