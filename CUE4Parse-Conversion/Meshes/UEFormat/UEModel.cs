@@ -133,9 +133,12 @@ public class UEModel : UEFormatExport
                 var weights = vert.UnpackWeights();
                 for (var index = 0; index < weights.Length; index++)
                 {
+                    var weight = weights[index];
+                    if (weight <= 0) continue;
+                    
                     weightsChunk.Write(vertBones[index]);
                     weightsChunk.Write(vertexIndex);
-                    weightsChunk.Write(weights[index]);
+                    weightsChunk.Write(weight);
                     weightsChunk.Count++;
                 }
             }
