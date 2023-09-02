@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using CUE4Parse_Conversion.Animations.PSA;
 using CUE4Parse_Conversion.UEFormat;
+using CUE4Parse.UE4.Objects.Core.Math;
 
 namespace CUE4Parse_Conversion.Animations.UEFormat;
 
@@ -27,17 +28,23 @@ public class UEAnim : UEFormatExport
                 var boneTransform = refSkeleton.FinalRefBonePose[i];
                 
                 var keys = new List<FBoneKey>();
-                for (var f = 0; f < sequence.NumFrames; f++)
+                FTransform? lastValidKeyTransform = null;
+                for (var frame = 0; frame < sequence.NumFrames; frame++)
                 {
-                    var key = new FBoneKey(boneTransform);
+                    var key = new FBoneKey(frame, boneTransform);
+                    
                     if (sequence.OriginalSequence.FindTrackForBoneIndex(i) >= 0)
                     {
-                        track.GetBoneTransform(f, sequence.NumFrames, ref key.Rotation, ref key.Location, ref key.Scale);
+                        track.GetBoneTransform(frame, sequence.NumFrames, ref key.Rotation, ref key.Location, ref key.Scale);
                     }
+                    
+                    if (lastValidKeyTransform is not null && lastValidKeyTransform.Equals(key.Transform)) continue;
+                    lastValidKeyTransform = key.Transform;
                     
                     key.Rotation.Y = -key.Rotation.Y;
                     key.Rotation.W = -key.Rotation.W;
                     key.Location.Y = -key.Location.Y;
+
                     keys.Add(key);
                 }
                 

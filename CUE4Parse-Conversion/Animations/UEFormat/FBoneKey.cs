@@ -6,12 +6,15 @@ namespace CUE4Parse_Conversion.Animations.UEFormat;
 
 public class FBoneKey : ISerializable
 {
+    private int Frame;
     public FVector Location;
     public FQuat Rotation;
     public FVector Scale;
+    public FTransform Transform => new(Rotation, Location, Scale);
 
-    public FBoneKey(FTransform transform)
+    public FBoneKey(int frame, FTransform transform)
     {
+        Frame = frame;
         Location = transform.Translation;
         Rotation = transform.Rotation;
         Scale = transform.Scale3D;
@@ -19,6 +22,7 @@ public class FBoneKey : ISerializable
     
     public void Serialize(FArchiveWriter Ar)
     {
+        Ar.Write(Frame);
         Location.Serialize(Ar);
         Rotation.Serialize(Ar);
         Scale.Serialize(Ar);
