@@ -1,15 +1,15 @@
 ﻿using System.Collections.Generic;
 using CUE4Parse_Conversion.Animations.PSA;
-using CUE4Parse_Conversion.UnrealFormat;
+using CUE4Parse_Conversion.UEFormat;
 
-namespace CUE4Parse_Conversion.Animations.UnrealFormat;
+namespace CUE4Parse_Conversion.Animations.UEFormat;
 
-public class UnrealAnim : UnrealFormatExport
+public class UEAnim : UEFormatExport
 {
     
     protected override string Identifier { get; set; } = "UEANIM";
     
-    public UnrealAnim(string name, CAnimSet animSet, int sequenceIndex, ExporterOptions options) : base(name, options)
+    public UEAnim(string name, CAnimSet animSet, int sequenceIndex, ExporterOptions options) : base(name, options)
     {
         var sequence = animSet.Sequences[sequenceIndex];
         Ar.Write(sequence.NumFrames);

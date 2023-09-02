@@ -2,25 +2,25 @@ using System;
 using System.Text;
 using CUE4Parse.UE4.Writers;
 
-namespace CUE4Parse_Conversion.UnrealFormat;
+namespace CUE4Parse_Conversion.UEFormat;
 
-public class FUnrealFormatHeader : ISerializable
+public class FUEFormatHeader : ISerializable
 {
     public EFileCompressionFormat CompressionFormat;
     public int CompressedSize;
     public int UncompressedSize;
     
     private readonly string Identifier;
-    private EUnrealFormatVersion FileVersion;
+    private EUEFormatVersion FileVersion;
     private string ObjectName;
-    private const string MAGIC = "UNREALFORMAT";
+    private const string MAGIC = "UEFORMAT";
 
-    public FUnrealFormatHeader(string identifier, string objectName, EFileCompressionFormat compressionFormat = EFileCompressionFormat.None)
+    public FUEFormatHeader(string identifier, string objectName, EFileCompressionFormat compressionFormat = EFileCompressionFormat.None)
     {
         Identifier = identifier;
         ObjectName = objectName;
         CompressionFormat = compressionFormat;
-        FileVersion = EUnrealFormatVersion.LatestVersion;
+        FileVersion = EUEFormatVersion.LatestVersion;
     }
     
     public void Serialize(FArchiveWriter Ar)

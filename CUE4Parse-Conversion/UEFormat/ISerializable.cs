@@ -1,6 +1,6 @@
 using CUE4Parse.UE4.Writers;
 
-namespace CUE4Parse_Conversion.UnrealFormat;
+namespace CUE4Parse_Conversion.UEFormat;
 
 public interface ISerializable
 {

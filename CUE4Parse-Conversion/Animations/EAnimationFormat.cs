@@ -7,6 +7,6 @@ public enum EAnimationFormat
     [Description("ActorX (psa)")]
     ActorX,
         
-    [Description("Unreal Format (ueanim)")]
-    UnrealFormat
+    [Description("UE Format (ueanim)")]
+    UEFormat
 }

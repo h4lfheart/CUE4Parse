@@ -3,9 +3,9 @@ using CUE4Parse.UE4.Writers;
 using Ionic.Zlib;
 using ZstdSharp;
 
-namespace CUE4Parse_Conversion.UnrealFormat;
+namespace CUE4Parse_Conversion.UEFormat;
 
-public abstract class UnrealFormatExport
+public abstract class UEFormatExport
 {
     protected virtual string Identifier { get; set; }
     protected readonly FArchiveWriter Ar = new();
@@ -14,7 +14,7 @@ public abstract class UnrealFormatExport
     
     private const int ZSTD_LEVEL = 6;
     
-    protected UnrealFormatExport(string name, ExporterOptions options)
+    protected UEFormatExport(string name, ExporterOptions options)
     {
         ObjectName = name;
         Options = options;
@@ -22,7 +22,7 @@ public abstract class UnrealFormatExport
 
     public void Save(FArchiveWriter archive)
     {
-        var header = new FUnrealFormatHeader(Identifier, ObjectName, Options.CompressionFormat);
+        var header = new FUEFormatHeader(Identifier, ObjectName, Options.CompressionFormat);
         var data = Ar.GetBuffer();
         header.UncompressedSize = data.Length;
         

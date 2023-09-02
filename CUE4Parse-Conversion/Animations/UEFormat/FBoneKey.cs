@@ -1,8 +1,8 @@
-﻿using CUE4Parse_Conversion.UnrealFormat;
+﻿using CUE4Parse_Conversion.UEFormat;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Writers;
 
-namespace CUE4Parse_Conversion.Animations.UnrealFormat;
+namespace CUE4Parse_Conversion.Animations.UEFormat;
 
 public class FBoneKey : ISerializable
 {

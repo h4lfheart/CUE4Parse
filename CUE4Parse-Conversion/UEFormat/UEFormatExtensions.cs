@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using CUE4Parse.UE4.Writers;
 
-namespace CUE4Parse_Conversion.UnrealFormat;
+namespace CUE4Parse_Conversion.UEFormat;
 
-public static class UnrealFormatExtensions
+public static class UEFormatExtensions
 {
     public static void WriteFString(this FArchiveWriter Ar, string str)
     {

@@ -7,7 +7,7 @@ using CUE4Parse.UE4.Writers;
 using CUE4Parse.Utils;
 using CUE4Parse_Conversion.ActorX;
 using CUE4Parse_Conversion.Animations.PSA;
-using CUE4Parse_Conversion.Animations.UnrealFormat;
+using CUE4Parse_Conversion.Animations.UEFormat;
 using CUE4Parse.UE4.Assets.Exports;
 
 namespace CUE4Parse_Conversion.Animations
@@ -35,9 +35,9 @@ namespace CUE4Parse_Conversion.Animations
                         ext = "psa";
                         ExportAnimationActorX(Ar, animSet, sequenceIndex);
                         break;
-                    case EAnimationFormat.UnrealFormat:
+                    case EAnimationFormat.UEFormat:
                         ext = "ueanim";
-                        new UnrealAnim(export.Name, animSet, sequenceIndex, Options).Save(Ar);
+                        new UEAnim(export.Name, animSet, sequenceIndex, Options).Save(Ar);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(Options.MeshFormat), Options.MeshFormat, null);

@@ -1,6 +1,6 @@
-namespace CUE4Parse_Conversion.UnrealFormat;
+namespace CUE4Parse_Conversion.UEFormat;
 
-public enum EUnrealFormatVersion
+public enum EUEFormatVersion
 {
     BeforeCustomVersionWasAdded = 0,
         

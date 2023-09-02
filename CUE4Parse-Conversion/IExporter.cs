@@ -11,7 +11,7 @@ using CUE4Parse_Conversion.Animations;
 using CUE4Parse_Conversion.Materials;
 using CUE4Parse_Conversion.Meshes;
 using CUE4Parse_Conversion.Textures;
-using CUE4Parse_Conversion.UnrealFormat;
+using CUE4Parse_Conversion.UEFormat;
 
 namespace CUE4Parse_Conversion
 {

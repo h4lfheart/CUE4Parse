@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using CUE4Parse_Conversion.Meshes.PSK;
-using CUE4Parse_Conversion.UnrealFormat;
+using CUE4Parse_Conversion.UEFormat;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
@@ -9,25 +9,25 @@ using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Objects.UObject;
 
-namespace CUE4Parse_Conversion.Meshes.UnrealFormat;
+namespace CUE4Parse_Conversion.Meshes.UEFormat;
 
-public class UnrealModel : UnrealFormatExport
+public class UEModel : UEFormatExport
 {
     protected override string Identifier { get; set; } = "UEMODEL";
     
-    public UnrealModel(CStaticMeshLod lod, string name, ExporterOptions options) : base(name, options) 
+    public UEModel(CStaticMeshLod lod, string name, ExporterOptions options) : base(name, options) 
     {
         SerializeStaticMeshData(lod.Verts, lod.Indices.Value, lod.VertexColors, lod.Sections.Value, lod.ExtraUV.Value);
     }
     
-    public UnrealModel(CSkelMeshLod lod, string name, List<CSkelMeshBone> bones, FPackageIndex[]? morphTargets, FPackageIndex[] sockets, int lodIndex, ExporterOptions options) : base(name, options)
+    public UEModel(CSkelMeshLod lod, string name, List<CSkelMeshBone> bones, FPackageIndex[]? morphTargets, FPackageIndex[] sockets, int lodIndex, ExporterOptions options) : base(name, options)
     {
         SerializeStaticMeshData(lod.Verts, lod.Indices.Value, lod.VertexColors, lod.Sections.Value, lod.ExtraUV.Value);
         SerializeSkeletalMeshData(lod.Verts, morphTargets, lodIndex);
         SerializeSkeletonData(bones, sockets);
     }
     
-    public UnrealModel(string name, List<CSkelMeshBone> bones, FPackageIndex[] sockets, ExporterOptions options) : base(name, options)
+    public UEModel(string name, List<CSkelMeshBone> bones, FPackageIndex[] sockets, ExporterOptions options) : base(name, options)
     {
         SerializeSkeletonData(bones, sockets);
     }
