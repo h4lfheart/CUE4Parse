@@ -27,28 +27,48 @@ public class UEAnim : UEFormatExport
                 var track = sequence.Tracks[i];
                 var boneTransform = refSkeleton.FinalRefBonePose[i];
                 
-                var keys = new List<FBoneKey>();
-                FTransform? lastValidKeyTransform = null;
+                var positionKeys = new List<FVectorKey>();
+                var rotationKeys = new List<FQuatKey>();
+                var scaleKeys = new List<FVectorKey>();
+                FVector? prevPos = null;
+                FQuat? prevRot = null;
+                FVector? prevScale = null;
                 for (var frame = 0; frame < sequence.NumFrames; frame++)
                 {
-                    var key = new FBoneKey(frame, boneTransform);
-                    
+                    var translation = boneTransform.Translation;
+                    var rotation = boneTransform.Rotation;
+                    var scale = boneTransform.Scale3D;
                     if (sequence.OriginalSequence.FindTrackForBoneIndex(i) >= 0)
                     {
-                        track.GetBoneTransform(frame, sequence.NumFrames, ref key.Rotation, ref key.Location, ref key.Scale);
+                        track.GetBoneTransform(frame, sequence.NumFrames, ref rotation, ref translation, ref scale);
                     }
                     
-                    if (lastValidKeyTransform is not null && lastValidKeyTransform.Equals(key.Transform)) continue;
-                    lastValidKeyTransform = key.Transform;
-                    
-                    key.Rotation.Y = -key.Rotation.Y;
-                    key.Rotation.W = -key.Rotation.W;
-                    key.Location.Y = -key.Location.Y;
+                    rotation.Y = -rotation.Y;
+                    rotation.W = -rotation.W;
+                    translation.Y = -translation.Y;
 
-                    keys.Add(key);
+                    if (prevPos is null || prevPos != translation)
+                    {
+                        positionKeys.Add(new FVectorKey(frame, translation));
+                        prevPos = translation;
+                    }
+                    
+                    if (prevRot is null || prevRot != rotation)
+                    {
+                        rotationKeys.Add(new FQuatKey(frame, rotation));
+                        prevRot = rotation;
+                    }
+                    
+                    if (prevScale is null || prevScale != scale)
+                    {
+                        scaleKeys.Add(new FVectorKey(frame, scale));
+                        prevScale = scale;
+                    }
                 }
                 
-                trackChunk.WriteArray(keys);
+                trackChunk.WriteArray(positionKeys);
+                trackChunk.WriteArray(rotationKeys);
+                trackChunk.WriteArray(scaleKeys);
             }
             
             trackChunk.Serialize(Ar);
