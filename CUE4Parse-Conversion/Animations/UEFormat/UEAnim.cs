@@ -13,6 +13,7 @@ public class UEAnim : UEFormatExport
     public UEAnim(string name, CAnimSet animSet, int sequenceIndex, ExporterOptions options) : base(name, options)
     {
         var sequence = animSet.Sequences[sequenceIndex];
+        var originalSequence = sequence.OriginalSequence;
         Ar.Write(sequence.NumFrames);
         Ar.Write(sequence.FramesPerSecond);
 
@@ -73,5 +74,25 @@ public class UEAnim : UEFormatExport
             
             trackChunk.Serialize(Ar);
         }
+
+        var floatCurves = originalSequence.CompressedCurveData.FloatCurves;
+        if (floatCurves is not null)
+        {
+            using var curveChunk = new FDataChunk("CURVES", floatCurves.Length);
+            
+            foreach (var floatCurve in floatCurves)
+            {
+                curveChunk.WriteFString(floatCurve.Name.DisplayName.Text);
+                curveChunk.Write(floatCurve.FloatCurve.Keys.Length);
+                foreach (var floatCurveKey in floatCurve.FloatCurve.Keys)
+                {
+                    var key = new FFloatKey((int) floatCurveKey.Time * 30, floatCurveKey.Value);
+                    key.Serialize(curveChunk);
+                }
+            }
+            
+            curveChunk.Serialize(Ar);
+        }
+        
     }
 }
