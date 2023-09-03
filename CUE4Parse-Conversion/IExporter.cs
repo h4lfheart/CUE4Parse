@@ -12,6 +12,8 @@ using CUE4Parse_Conversion.Materials;
 using CUE4Parse_Conversion.Meshes;
 using CUE4Parse_Conversion.Textures;
 using CUE4Parse_Conversion.UEFormat;
+using CUE4Parse_Conversion.Worlds;
+using CUE4Parse.UE4.Objects.Engine;
 
 namespace CUE4Parse_Conversion
 {
@@ -25,6 +27,7 @@ namespace CUE4Parse_Conversion
         public ESocketFormat SocketFormat;
         public EFileCompressionFormat CompressionFormat;
         public EAnimationFormat AnimationFormat;
+        public EWorldFormat WorldFormat;
         public bool ExportMorphTargets;
         public bool ExportMaterials;
 
@@ -35,6 +38,7 @@ namespace CUE4Parse_Conversion
             MaterialFormat = EMaterialFormat.AllLayersNoRef;
             TextureFormat = ETextureFormat.Png;
             AnimationFormat = EAnimationFormat.ActorX;
+            WorldFormat = EWorldFormat.UEFormat;
             Platform = ETexturePlatform.DesktopMobile;
             SocketFormat = ESocketFormat.Bone;
             CompressionFormat = EFileCompressionFormat.None;
@@ -100,6 +104,8 @@ namespace CUE4Parse_Conversion
                 USkeletalMesh skeletalMesh => new MeshExporter(skeletalMesh, options),
                 USkeleton skeleton => new MeshExporter(skeleton, options),
                 UStaticMesh staticMesh => new MeshExporter(staticMesh, options),
+                UWorld world => new WorldExporter(world, options),
+                ULevel level => new WorldExporter(level, options),
                 _ => throw new NotSupportedException($"export of '{export.GetType()}' is not supported yet.")
             };
         }
