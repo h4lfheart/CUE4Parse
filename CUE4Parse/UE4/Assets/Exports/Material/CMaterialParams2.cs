@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -26,15 +27,21 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public const string RegexSpecularMasks = "^SP_|.*(?:Specu|_S_|MR|(?<!no)RM).*|(?:_S|_LP|_PAK)$";
         public const string RegexEmissive = ".*Emiss.*|(?:_E|_EM)$";
 
+        [JsonIgnore]
         public bool HasTopDiffuse => HasTopTexture(Diffuse[0]);
+        [JsonIgnore]
         public bool HasTopNormals => HasTopTexture(Normals[0]);
+        [JsonIgnore]
         public bool HasTopSpecularMasks => HasTopTexture(SpecularMasks[0]);
+        [JsonIgnore]
         public bool HasTopEmissive => HasTopTexture(Emissive[0]);
 
         public EBlendMode BlendMode = EBlendMode.BLEND_Opaque;
         public EMaterialShadingModel ShadingModel = EMaterialShadingModel.MSM_Unlit;
 
+        [JsonIgnore]
         public bool IsTranslucent => BlendMode == EBlendMode.BLEND_Translucent;
+        [JsonIgnore]
         public bool IsNull => Textures.Count == 0;
 
         /// <summary>
@@ -148,7 +155,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public readonly Dictionary<string, FLinearColor> Colors = new ();
         public readonly Dictionary<string, float> Scalars = new ();
         public readonly Dictionary<string, bool> Switches = new ();
-        public readonly Dictionary<string, object?> Properties = new ();
+        public readonly Dictionary<string, object?> Parent = new();
+        [JsonIgnore]
+        public readonly Dictionary<string, object[]?> Properties = new ();
 
         public IEnumerable<UUnrealMaterial> GetTextures(IEnumerable<string> names)
         {
@@ -287,18 +296,23 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         {
             foreach (var property in properties)
             {
-                if (property.Name.Text is "Parent" or
-                    "TextureParameterValues" or
-                    "VectorParameterValues" or
-                    "ScalarParameterValues" or
-                    "StaticParameters" or
-                    "CachedReferencedTextures" or
-                    "TextureStreamingData" or
-                    "BlendMode" or
-                    "ShadingModel")
-                    continue;
-
-                Properties[property.Name.Text] = property.Tag?.GenericValue;
+                if (property.Name.Text is "Parent")
+                {
+                    Parent[property.Name.Text] = property.Tag?.GenericValue;
+                }
+                if (!Properties.TryGetValue(property.Name.Text, out var existingValue))
+                {
+                    // Create a new object array with a single element
+                    Properties[property.Name.Text] = new object?[] { property.Tag?.GenericValue };
+                }
+                else
+                {
+                    // Append the new value to the existing array
+                    int length = existingValue.Length;
+                    Array.Resize(ref existingValue, length + 1);
+                    existingValue[length] = property.Tag?.GenericValue;
+                    Properties[property.Name.Text] = existingValue;
+                }
             }
         }
 
