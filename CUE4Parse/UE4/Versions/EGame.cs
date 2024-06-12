@@ -106,6 +106,7 @@ namespace CUE4Parse.UE4.Versions
             GAME_WildAssault = GAME_UE5_3 + 2,
             GAME_NobodyWantsToDie = GAME_UE5_3 + 3,
         GAME_UE5_4 = GameUtils.GameUe5Base + 4 << 4,
+            GAME_Fortnite_27_11 = GAME_UE5_4 + 1,
         GAME_UE5_5 = GameUtils.GameUe5Base + 5 << 4,
 
         GAME_UE5_LATEST = GAME_UE5_5
