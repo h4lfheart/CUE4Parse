@@ -26,7 +26,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             IndirectionDimensions = Ar.Read<FIntVector>();
             NumDistanceFieldBricks = Ar.Read<int>();
 
-            if (Ar.Game >= EGame.GAME_UE5_4)
+            if (Ar.Game is >= EGame.GAME_UE5_4 and not EGame.GAME_Fortnite_27_11)
             {
                 VolumeToVirtualUVScale = Ar.Read<FVector>();
                 VolumeToVirtualUVAdd = Ar.Read<FVector>();
@@ -101,7 +101,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
         public FDistanceFieldVolumeData5(FAssetArchive Ar)
         {
-            LocalSpaceMeshBounds = Ar.Game >= EGame.GAME_UE5_4 ? new FBox(Ar.Read<FVector>(), Ar.Read<FVector>(), Ar.Read<byte>()) : new FBox(Ar);
+            LocalSpaceMeshBounds = Ar.Game is >= EGame.GAME_UE5_4 and not EGame.GAME_Fortnite_27_11 ? new FBox(Ar.Read<FVector>(), Ar.Read<FVector>(), Ar.Read<byte>()) : new FBox(Ar);
             bMostlyTwoSided = Ar.ReadBoolean();
             Mips = Ar.ReadArray(DistanceField.NumMips, () => new FSparseDistanceFieldMip(Ar));
             AlwaysLoadedMip = Ar.ReadArray<byte>();
