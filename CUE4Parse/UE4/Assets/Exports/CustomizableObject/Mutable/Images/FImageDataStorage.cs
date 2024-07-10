@@ -1,12 +1,10 @@
-using System;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
-using Serilog;
 using FImageArray = byte[];
 
-namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable;
+namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Images;
 
 public class FImageDataStorage
 {
@@ -14,10 +12,15 @@ public class FImageDataStorage
     public TIntVector2<ushort> ImageSize;
     public byte NumLODs;
     public EImageFormat ImageFormat;
-    [JsonIgnore] public byte[][] Buffers;
-    [JsonIgnore] public ushort[] CompactedTailOffsets;
+    public byte[][] Buffers;
+    public ushort[] CompactedTailOffsets;
     
     private const int NumLODsInCompactedTail = 7;
+
+    public FImageDataStorage()
+    {
+        
+    }
     
     public FImageDataStorage(FArchive Ar)
     {

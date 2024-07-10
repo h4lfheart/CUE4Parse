@@ -1,4 +1,5 @@
 using System;
+using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Math;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
