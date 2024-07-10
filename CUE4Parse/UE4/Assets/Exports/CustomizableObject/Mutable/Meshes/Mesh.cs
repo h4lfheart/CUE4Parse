@@ -39,12 +39,12 @@ public class Mesh : IMutablePtr
         IndexBuffers = new FMeshBufferSet(Ar);
         VertexBuffers = new FMeshBufferSet(Ar);
         AdditionalBuffers = Ar.ReadArray(() => new KeyValuePair<EMeshBufferType, FMeshBufferSet>(Ar.Read<EMeshBufferType>(), new FMeshBufferSet(Ar)));
-        Layouts = Ar.ReadArray(Ar.ReadMutableObject<Layout>);
+        Layouts = Ar.ReadArray(Ar.ReadMutable<Layout>);
 
         SkeletonIDs = Ar.ReadArray<uint>();
 
-        Skeleton = Ar.ReadMutableObject<Skeleton>();
-        PhysicsBody = Ar.ReadMutableObject<PhysicsBody>();
+        Skeleton = Ar.ReadMutable<Skeleton>();
+        PhysicsBody = Ar.ReadMutable<PhysicsBody>();
 
         Flags = Ar.Read<EMeshFlags>();
         
@@ -56,7 +56,7 @@ public class Mesh : IMutablePtr
         BonePoses = Ar.ReadArray(() => new FBonePose(Ar, Version));
         BoneMap = Ar.ReadArray(() => new FBoneName(Ar));
 
-        AdditionalPhysicsBodies = Ar.ReadArray(Ar.ReadMutableObject<PhysicsBody>);
+        AdditionalPhysicsBodies = Ar.ReadArray(Ar.ReadMutable<PhysicsBody>);
 
         MeshIDPrefix = Ar.Read<uint>();
         

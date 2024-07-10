@@ -66,7 +66,7 @@ public interface IMutablePtr
 
 public static class MutablePtrExtensions 
 {
-    public static T ReadMutableObject<T>(this FArchive Ar) where T : IMutablePtr, new()
+    public static T ReadMutable<T>(this FArchive Ar) where T : IMutablePtr, new()
     {
         var obj = new MutablePtr<T>(Ar);
         return obj.Object;

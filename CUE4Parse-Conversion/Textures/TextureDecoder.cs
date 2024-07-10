@@ -10,6 +10,7 @@ using CUE4Parse_Conversion.Textures.ASTC;
 using CUE4Parse_Conversion.Textures.BC;
 using CUE4Parse_Conversion.Textures.DXT;
 using CUE4Parse.Compression;
+using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Images;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.Utils;
 using SkiaSharp;
@@ -158,6 +159,35 @@ public static class TextureDecoder
         return bitmaps.ToArray();
     }
 
+    public static SKBitmap Decode(this Image image)
+    {
+        var dataStorage = image.DataStorage;
+
+        var size = dataStorage.ImageSize;
+        
+        var rawBytes = dataStorage.Buffers.SelectMany(buffer => buffer).ToArray();
+        var decodedBytes = dataStorage.ImageFormat switch
+        {
+            EImageFormat.IF_BC5 => BCDecoder.BC5(rawBytes, size.X, size.Y, 1),
+            EImageFormat.IF_BC4 => BCDecoder.BC4(rawBytes, size.X, size.Y, 1),
+            EImageFormat.IF_BC3 => DXTDecoder.DXT5(rawBytes, size.X, size.Y, 1),
+            EImageFormat.IF_BC1 => DXTDecoder.DXT1(rawBytes, size.X, size.Y, 1),
+            _ => throw new NotImplementedException($"Mutable image format not supported: {dataStorage.ImageFormat}")
+        };
+        
+        var imageFormat = dataStorage.ImageFormat switch
+        {
+            EImageFormat.IF_BC5 => SKColorType.Rgb888x,
+            EImageFormat.IF_BC4 => SKColorType.Gray8,
+            EImageFormat.IF_BC3 => SKColorType.Rgba8888,
+            EImageFormat.IF_BC1 => SKColorType.Rgba8888,
+            _ => throw new NotImplementedException($"Mutable image format not supported: {dataStorage.ImageFormat}")
+        };
+
+        var imageInfo = new SKImageInfo(size.X, size.Y, imageFormat);
+        return InstallPixels(decodedBytes, imageInfo);
+    } 
+
     private static byte[] GetImageDataRange(byte[] data, FTexture2DMipMap mip, int sizeX, int sizeY, int zLayer)
     {
         var offset = sizeX * sizeY * 4;
@@ -192,7 +222,7 @@ public static class TextureDecoder
 
         DecodeBytes(bytes, sizeX, sizeY, sizeZ, formatInfo, isNormalMap, out data, out colorType);
     }
-
+    
     private static void DecodeBytes(byte[] bytes, int sizeX, int sizeY, int sizeZ, FPixelFormatInfo formatInfo, bool isNormalMap, out byte[] data, out SKColorType colorType)
     {
         switch (formatInfo.UnrealFormat)
