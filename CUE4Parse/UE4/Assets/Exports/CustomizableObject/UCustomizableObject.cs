@@ -1,36 +1,77 @@
-﻿using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable;
+﻿using System.Diagnostics;
+using CUE4Parse.MappingsProvider.Usmap;
+using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Readers;
+using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject;
 
 public class UCustomizableObject : UObject
 {
-    // private const int CurrentVersion = 414;
-
-    public FMorphTargetInfo[] ContributingMorphTargetsInfo;
-    public FMorphTargetVertexData[] MorphTargetReconstructionData;
-    public FCustomizableObjectMeshToMeshVertData[] ClothMeshToMeshVertData;
-    public FCustomizableObjectClothingAssetData[] ContributingClothingAssetsData;
-    public FCustomizableObjectClothConfigData[] ClothSharedConfigsData;
+    public ECustomizableObjectVersions Version;
+    public Model Model;
     
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
 
-        var version = Ar.Read<int>();
-
-        // if (CurrentVersion == version)
-        {
-            ContributingMorphTargetsInfo = Ar.ReadArray<FMorphTargetInfo>();
-            MorphTargetReconstructionData = Ar.ReadArray<FMorphTargetVertexData>();
-        }
-
-        {
-            ClothMeshToMeshVertData = Ar.ReadBulkArray(() => new FCustomizableObjectMeshToMeshVertData(Ar));
-            ContributingClothingAssetsData = Ar.ReadArray(() => new FCustomizableObjectClothingAssetData(Ar));
-            ClothSharedConfigsData = Ar.ReadArray(() => new FCustomizableObjectClothConfigData(Ar));
-        }
-
-        var model = new Model(Ar);
+        Version = Ar.Read<ECustomizableObjectVersions>();
+        Model = new Model(Ar);
+    }
+    
+    public static string ReadMutableFString(FArchive Ar)
+    {
+        var length = Ar.Read<int>() * 2;
+        if (length >= 240) Debugger.Break();
+        return Ar.ReadStringUnsafe(length).Replace("\0", string.Empty);
     }
 }
+
+public enum ECustomizableObjectVersions : int
+{
+    FirstEnumeratedVersion = 450,
+
+    DeterminisiticMeshVertexIds,
+
+    NumRuntimeReferencedTextures,
+		
+    DeterminisiticLayoutBlockIds,
+
+    BackoutDeterminisiticLayoutBlockIds,
+
+    FixWrappingProjectorLayoutBlockId,
+
+    MeshReferenceSupport,
+
+    ImproveMemoryUsageForStreamableBlocks,
+
+    FixClipMeshWithMeshCrash,
+
+    SkeletalMeshLODSettingsSupport,
+
+    RemoveCustomCurve,
+
+    AddEditorGamePlayTags,
+
+    AddedParameterThumbnailsToEditor,
+
+    ComponentsLODsRedesign,
+
+    ComponentsLODsRedesign2,
+
+    LayoutToPOD,
+
+    AddedRomFlags,
+
+    LayoutNodeCleanup,
+
+    AddSurfaceAndMeshMetadata,
+
+    TablesPropertyNameBug,
+
+    DataTablesParamTrackingForCompileOnlySelected,
+
+    // -----<new versions can be added above this line>--------
+    LastCustomizableObjectVersion
+};
