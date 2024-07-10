@@ -1,5 +1,10 @@
+using System;
+using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
+using Newtonsoft.Json;
+using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Parameters;
 
@@ -9,11 +14,11 @@ public class FParameterDesc
 
     public string Name;
     public FGuid Uid;
-    public PARAMETER_TYPE Type = PARAMETER_TYPE.T_NONE;
-    public PARAMETER_TYPE DefaultValue;
+    public PARAMETER_TYPE Type;
+    public object DefaultValue;
     public uint[] Ranges;
     public FIntValueDesc[] PossibleValues;
-    
+
     public FParameterDesc(FArchive Ar)
     {
         Version = Ar.Read<int>();
@@ -21,10 +26,30 @@ public class FParameterDesc
         Name = UCustomizableObject.ReadMutableFString(Ar);
         Uid = Ar.Read<FGuid>();
         Type = Ar.Read<PARAMETER_TYPE>();
-        DefaultValue = Ar.Read<PARAMETER_TYPE>();
-        Ar.Position += 1;
+        
+        if (Type == PARAMETER_TYPE.T_IMAGE) Ar.Position += 1; // ???
+        
+        DefaultValue = Type switch
+        {
+            PARAMETER_TYPE.T_BOOL => Ar.Read<byte>() == 1,
+            PARAMETER_TYPE.T_INT => Ar.Read<int>(),
+            PARAMETER_TYPE.T_FLOAT => Ar.Read<float>(),
+            PARAMETER_TYPE.T_COLOUR => Ar.Read<FVector4>(),
+            PARAMETER_TYPE.T_PROJECTOR => new FProjector(Ar),
+            PARAMETER_TYPE.T_IMAGE => new FName(UCustomizableObject.ReadMutableFString(Ar)),
+            PARAMETER_TYPE.T_STRING => UCustomizableObject.ReadMutableFString(Ar),
+            _ => throw new ArgumentOutOfRangeException()
+        };
+        
+        if (Type != PARAMETER_TYPE.T_IMAGE) Ar.Position += 1;
+        
         Ranges = Ar.ReadArray<uint>();
         PossibleValues = Ar.ReadArray(() => new FIntValueDesc(Ar));
+    }
+
+    public T? GetDefaultValue<T>()
+    {
+        return DefaultValue is not T retValue ? default : retValue;
     }
 }
 
@@ -59,4 +84,4 @@ public enum PARAMETER_TYPE : uint
     //! Utility enumeration value, not really a parameter type.
     T_COUNT
 
-};
+}

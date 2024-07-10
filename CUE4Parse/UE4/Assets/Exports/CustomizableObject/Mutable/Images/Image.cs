@@ -8,9 +8,8 @@ using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable;
 
-public class Image
+public class Image : IMutablePtr
 {
-    public int Version;
     public byte Flags;
     
     // Version < 3
@@ -22,17 +21,10 @@ public class Image
     // Version >= 4
     public FImageDataStorage DataStorage;
 
-    public bool IsBroken;
+    public int Version { get; set; }
     
-    public Image(FArchive Ar)
+    public void Deserialize(FArchive Ar)
     {
-        Version = Ar.Read<int>();
-        if (Version == -1)
-        {
-            IsBroken = true;
-            return;
-        }
-
         if (Version > 4)
         {
             throw new ParserException($"Mutable image version {Version} is not supported.");

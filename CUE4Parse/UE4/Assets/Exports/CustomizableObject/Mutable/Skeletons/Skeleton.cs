@@ -4,29 +4,19 @@ using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Skeletons;
 
-public class Skeleton
+public class Skeleton : IMutablePtr
 {
-    public int Version;
-
     public FBoneName[] BoneIds;
     public short[] BoneParents;
     
     public ushort[] BoneIds_DEPRECATED;
     public int[] BoneIds_DEPRECATED2;
     public FTransform[] BoneTransforms_DEPRECATED;
-    
 
-    public bool IsBroken;
+    public int Version { get; set; }
     
-    public Skeleton(FArchive Ar)
+    public void Deserialize(FArchive Ar)
     {
-        Version = Ar.Read<int>();
-        if (Version == -1)
-        {
-            IsBroken = true;
-            return;
-        }
-
         if (Version >= 7)
         {
             BoneIds = Ar.ReadArray(() => new FBoneName(Ar));

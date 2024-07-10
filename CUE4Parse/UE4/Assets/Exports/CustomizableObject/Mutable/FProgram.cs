@@ -20,19 +20,19 @@ public class FProgram
     public byte[] ByteCode;
     public FState[] States;
     public FRomData[] Roms;
-    public Dictionary<int, Image> ConstantImageLODs = new();
+    public MutablePtr<Image>[] ConstantImageLODs;
     public uint[] ConstantImageLODIndices;
     public FImageLODRange[] ConstantImages;
-    public Dictionary<int, Mesh> ConstantMeshes = new();
+    public MutablePtr<Mesh>[] ConstantMeshes;
     public ExtensionData[] ConstantExtensionData;
     public string[] ConstantStrings;
-    public Dictionary<int, Layout> ConstantLayouts = new();
+    public MutablePtr<Layout>[] ConstantLayouts;
     public FProjector[] ConstantProjectors;
     public FMatrix[] ConstantMatrices;
     public FShape[] ConstantShapes;
     public FRichCurve[] ConstantCurves;
-    public Dictionary<int, Skeleton> ConstantSkeletons = new();
-    public Dictionary<int, PhysicsBody> ConstantPhysicsBodies = new();
+    public MutablePtr<Skeleton>[] ConstantSkeletons;
+    public MutablePtr<PhysicsBody>[] ConstantPhysicsBodies;
     public FParameterDesc[] Parameters;
     public FRangeDesc[] Ranges;
     public ushort[][] ParameterLists;
@@ -45,97 +45,26 @@ public class FProgram
         States = Ar.ReadArray(() => new FState(Ar));
         Roms = Ar.ReadArray(() => new FRomData(Ar));
 
-        var constantImageLodCount = Ar.Read<int>();
-        for (var imageLodIndex = 0; imageLodIndex < constantImageLodCount; imageLodIndex++)
-        {
-            var index = Ar.Read<int>();
-            if (index == -1)
-            {
-                imageLodIndex--;
-                continue;
-            }
-
-            var image = new Image(Ar);
-            if (image.IsBroken) continue;
-
-            ConstantImageLODs[index] = image;
-        }
+        ConstantImageLODs = MutablePtr<Image>.ReadArray(Ar);
         
         ConstantImageLODIndices = Ar.ReadArray<uint>();
         ConstantImages = Ar.ReadArray(() => new FImageLODRange(Ar));
 
-        var constantMeshCount = Ar.Read<int>();
-        for (var meshIndex = 0; meshIndex < constantMeshCount; meshIndex++)
-        {
-            var index = Ar.Read<int>();
-            if (index == -1)
-            {
-                meshIndex--;
-                continue;
-            }
-            
-            var mesh = new Mesh(Ar); 
-            if (mesh.IsBroken) continue;
-
-            ConstantMeshes[index] = mesh;
-        }
+        ConstantMeshes = MutablePtr<Mesh>.ReadArray(Ar);
 
         ConstantExtensionData = Ar.ReadArray(() => new ExtensionData(Ar));
         ConstantStrings = Ar.ReadArray(() => UCustomizableObject.ReadMutableFString(Ar));
-        
-        var constantLayoutCount = Ar.Read<int>();
-        for (var layoutIndex = 0; layoutIndex < constantLayoutCount; layoutIndex++)
-        {
-            var index = Ar.Read<int>();
-            if (index == -1)
-            {
-                layoutIndex--;
-                continue;
-            }
-            
-            var layout = new Layout(Ar); 
-            if (layout.IsBroken) continue;
 
-            ConstantLayouts[index] = layout;
-        }
+        ConstantLayouts = MutablePtr<Layout>.ReadArray(Ar);
         
         ConstantProjectors = Ar.ReadArray(() => new FProjector(Ar));
         ConstantMatrices = Ar.ReadArray(() => new FMatrix(Ar));
         ConstantShapes = Ar.ReadArray(() => new FShape(Ar));
         ConstantCurves = Ar.ReadArray(() => new FRichCurve(Ar));
         
-        var constantSkeletonCount = Ar.Read<int>();
-        for (var skeletonIndex = 0; skeletonIndex < constantSkeletonCount; skeletonIndex++)
-        {
-            var index = Ar.Read<int>();
-            if (index == -1)
-            {
-                skeletonIndex--;
-                continue;
-            }
-            
-            var skeleton = new Skeleton(Ar); 
-            if (skeleton.IsBroken) continue;
-
-            ConstantSkeletons[index] = skeleton;
-        }
+        ConstantSkeletons = MutablePtr<Skeleton>.ReadArray(Ar);
+        ConstantPhysicsBodies = MutablePtr<PhysicsBody>.ReadArray(Ar);
         
-        var constantPhysicsBodyCount = Ar.Read<int>();
-        for (var physicsBodyIndex = 0; physicsBodyIndex < constantPhysicsBodyCount; physicsBodyIndex++)
-        {
-            var index = Ar.Read<int>();
-            if (index == -1)
-            {
-                physicsBodyIndex--;
-                continue;
-            }
-            
-            var physicsBody = new PhysicsBody(Ar); 
-            if (physicsBody.IsBroken) continue;
-
-            ConstantPhysicsBodies[index] = physicsBody;
-        }
-
         Parameters = Ar.ReadArray(() => new FParameterDesc(Ar));
         Ranges = Ar.ReadArray(() => new FRangeDesc(Ar));
         ParameterLists = Ar.ReadArray(Ar.ReadArray<ushort>);

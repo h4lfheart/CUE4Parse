@@ -4,10 +4,8 @@ using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Physics;
 
-public class PhysicsBody
+public class PhysicsBody : IMutablePtr
 {
-    public int Version;
-
     public int CustomId;
     public FPhysicsBodyAggregate[] Bodies;
     public FBoneName[] BoneIds;
@@ -15,18 +13,10 @@ public class PhysicsBody
     public bool bBodiesModified;
     
     public ushort[] BoneIds_DEPRECATED;
-
-    public bool IsBroken;
-
-    public PhysicsBody(FArchive Ar)
+    public int Version { get; set; }
+    
+    public void Deserialize(FArchive Ar)
     {
-        Version = Ar.Read<int>();
-        if (Version == -1)
-        {
-            IsBroken = true;
-            return;
-        }
-
         if (Version >= 2)
         {
             CustomId = Ar.Read<int>();

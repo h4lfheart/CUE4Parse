@@ -23,7 +23,6 @@ public class UCustomizableObject : UObject
     public static string ReadMutableFString(FArchive Ar)
     {
         var length = Ar.Read<int>() * 2;
-        if (length >= 240) Debugger.Break();
         return Ar.ReadStringUnsafe(length).Replace("\0", string.Empty);
     }
 }
