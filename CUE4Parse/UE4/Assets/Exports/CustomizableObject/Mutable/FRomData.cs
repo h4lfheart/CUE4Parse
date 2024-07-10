@@ -8,7 +8,7 @@ public class FRomData
     public uint Size;
     public uint ResourceIndex;
     public DATATYPE ResourceType; 
-    public ushort Flags; // ERomFlags (couldn't find in github repo)
+    public ERomFlags Flags; // ERomFlags (couldn't find in github repo)
     
     
     public FRomData(FArchive Ar)
@@ -17,9 +17,18 @@ public class FRomData
         Size = Ar.Read<uint>();
         ResourceIndex = Ar.Read<uint>();
         ResourceType = Ar.Read<DATATYPE>();
-        Flags = Ar.Read<ushort>();
+        Flags = Ar.Read<ERomFlags>();
     }
 }
+
+public enum ERomFlags : ushort
+{
+    /** Standard data. */
+    None = 0,
+
+    /** Bigger mips and mesh lods that are optional in some devices of a platform. */
+    HighRes = 1 << 0,
+};
 
 public enum DATATYPE : ushort
 {

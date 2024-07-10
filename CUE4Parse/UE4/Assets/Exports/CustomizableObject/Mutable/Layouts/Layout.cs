@@ -3,27 +3,19 @@ using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Layouts;
 
-public class Layout
+public class Layout : IMutablePtr
 {
-    public int Version;
     public TIntVector2<ushort> Size;
     public FBlock[] Blocks;
     public TIntVector2<ushort> MaxSize;
     public EPackStrategy Strategy;
     public EReductionMethod ReductionMethod;
     public bool FirstLODToIgnoreWarnings;
-
-    public bool IsBroken;
     
-    public Layout(FArchive Ar)
+    public int Version { get; set; }
+    
+    public void Deserialize(FArchive Ar)
     {
-        Version = Ar.Read<int>();
-        if (Version == -1)
-        {
-            IsBroken = true;
-            return;
-        }
-        
         Size = Ar.Read<TIntVector2<ushort>>();
         Blocks = Ar.ReadArray(() => new FBlock(Ar));
         MaxSize = Ar.Read<TIntVector2<ushort>>();
