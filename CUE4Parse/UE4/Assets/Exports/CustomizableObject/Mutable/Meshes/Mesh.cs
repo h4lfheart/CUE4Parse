@@ -13,7 +13,7 @@ public class Mesh : IMutablePtr
     public FMeshBufferSet IndexBuffers;
     public FMeshBufferSet VertexBuffers;
     public KeyValuePair<EMeshBufferType, FMeshBufferSet>[] AdditionalBuffers;
-    public Layout[] Layouts;
+    public MutablePtr<Layout>[] Layouts;
     public uint[] SkeletonIDs;
     public Skeleton Skeleton;
     public PhysicsBody PhysicsBody;
@@ -39,7 +39,7 @@ public class Mesh : IMutablePtr
         IndexBuffers = new FMeshBufferSet(Ar);
         VertexBuffers = new FMeshBufferSet(Ar);
         AdditionalBuffers = Ar.ReadArray(() => new KeyValuePair<EMeshBufferType, FMeshBufferSet>(Ar.Read<EMeshBufferType>(), new FMeshBufferSet(Ar)));
-        Layouts = Ar.ReadArray(Ar.ReadMutable<Layout>);
+        Layouts = MutablePtr<Layout>.ReadArray(Ar);
 
         SkeletonIDs = Ar.ReadArray<uint>();
 

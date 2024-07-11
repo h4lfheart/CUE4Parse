@@ -21,7 +21,7 @@ public class Layout : IMutablePtr
         MaxSize = Ar.Read<TIntVector2<ushort>>();
 
         Strategy = Ar.Read<EPackStrategy>();
-        FirstLODToIgnoreWarnings = Ar.ReadBoolean();
+        FirstLODToIgnoreWarnings = Ar.Read<int>() == 1;
         ReductionMethod = Ar.Read<EReductionMethod>();
     }
 }
