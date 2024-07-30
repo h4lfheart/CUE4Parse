@@ -58,7 +58,7 @@ public class ActorXMesh
         share.Prepare(lod.Verts);
         foreach (var vert in lod.Verts)
         {
-            share.AddVertex(vert.Position, vert.Normal);
+            share.AddVertex(vert.Position, (FVector) vert.Normal);
         }
 
         ExportCommonMeshData(lod.Sections.Value, lod.Verts, lod.Indices.Value, share, materialExports);
@@ -84,7 +84,7 @@ public class ActorXMesh
         foreach (var vert in lod.Verts)
         {
             var weightsHash = (uint)StructuralComparisons.StructuralEqualityComparer.GetHashCode(vert.Influences);
-            share.AddVertex(vert.Position, vert.Normal, weightsHash);
+            share.AddVertex(vert.Position, (FVector) vert.Normal, weightsHash);
         }
 
         ExportCommonMeshData(lod.Sections.Value, lod.Verts, lod.Indices.Value, share, materialExports);
