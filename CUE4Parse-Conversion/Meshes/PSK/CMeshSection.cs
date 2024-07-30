@@ -13,6 +13,15 @@ namespace CUE4Parse_Conversion.Meshes.PSK
         public int NumFaces;
 
         public bool IsValid => MaterialIndex > -1;
+        
+        public CMeshSection(int index, int firstIndex, int numFaces, string? materialName, ResolvedObject? material)
+        {
+            MaterialIndex = index;
+            FirstIndex = firstIndex;
+            NumFaces = numFaces;
+            MaterialName = materialName;
+            Material = material;
+        }
 
         public CMeshSection(FStaticMeshSection section)
         {
