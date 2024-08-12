@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using CUE4Parse.MappingsProvider;
@@ -109,6 +110,20 @@ namespace CUE4Parse.UE4.Assets.Exports
             if (Ar.Game >= EGame.GAME_UE5_0 && (Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject) || Flags.HasFlag(EObjectFlags.RF_DefaultSubObject)))
             {
                 Ar.Position += 4; // No idea honestly
+            }
+            
+            var fields = GetType().GetFields();
+            foreach (var field in fields)
+            {
+                var propertyAttribute = field.GetCustomAttribute<UPropertyAttribute>();
+                if (propertyAttribute is null) continue;
+
+                var targetName = propertyAttribute.PropertyName ?? field.Name;
+
+                var targetProperty = Properties.FirstOrDefault(prop => prop.Name.Text.Equals(targetName));
+                if (targetProperty is null) continue;
+            
+                field.SetValue(this, targetProperty.Tag?.GetValue(field.FieldType));
             }
         }
 
@@ -579,5 +594,11 @@ namespace CUE4Parse.UE4.Assets.Exports
         //
         // Add more extension for the first group here
         //
+    }
+    
+    
+    public class UPropertyAttribute(string? propertyName = null) : Attribute
+    {
+        public readonly string? PropertyName = propertyName;
     }
 }
