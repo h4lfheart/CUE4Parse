@@ -15,6 +15,6 @@ public class USceneComponent : UObject
 
         RelativeLocation = GetOrDefault(nameof(RelativeLocation), FVector.ZeroVector);
         RelativeRotation = GetOrDefault(nameof(RelativeRotation), FRotator.ZeroRotator);
-        RelativeScale3D = GetOrDefault(nameof(RelativeScale3D), FVector.ZeroVector);
+        RelativeScale3D = GetOrDefault(nameof(RelativeScale3D), FVector.OneVector);
     }
 }
