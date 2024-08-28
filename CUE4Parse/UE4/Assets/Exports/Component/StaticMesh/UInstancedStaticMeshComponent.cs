@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
@@ -12,6 +15,8 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
+
+        ReadExtraData(Ar);
 
         var bCooked = false;
         if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.SerializeInstancedStaticMeshRenderData ||
@@ -63,5 +68,24 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
             writer.WritePropertyName("PerInstanceSMCustomData");
             serializer.Serialize(writer, PerInstanceSMCustomData);
         }
+    }
+
+    private void ReadExtraData(FAssetArchive Ar)
+    {
+        if (!Ar.Owner?.Provider?.InternalGameName.Equals("FortniteGame", StringComparison.OrdinalIgnoreCase) ?? true) return;
+
+        Ar.Position += 4;
+
+        if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.SerializeInstancedStaticMeshRenderData || FEditorObjectVersion.Get(Ar) >= FEditorObjectVersion.Type.SerializeInstancedStaticMeshRenderData)
+        {
+            Ar.ReadBoolean();
+        }
+
+        if (FFortniteMainBranchObjectVersion.Get(Ar) > FFortniteMainBranchObjectVersion.Type.ISMComponentEditableWhenInheritedSkipSerialization)
+        {
+            Ar.ReadBoolean();
+        }
+
+        Ar.Position += 4;
     }
 }
