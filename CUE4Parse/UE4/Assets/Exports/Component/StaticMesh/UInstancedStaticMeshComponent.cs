@@ -76,16 +76,24 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
 
         Ar.Position += 4;
 
+        var matchData = new List<byte>(); 
         if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.SerializeInstancedStaticMeshRenderData || FEditorObjectVersion.Get(Ar) >= FEditorObjectVersion.Type.SerializeInstancedStaticMeshRenderData)
-        {
-            Ar.ReadBoolean();
-        }
-
+            matchData.AddRange([1, 0, 0, 0]);
         if (FFortniteMainBranchObjectVersion.Get(Ar) > FFortniteMainBranchObjectVersion.Type.ISMComponentEditableWhenInheritedSkipSerialization)
+            matchData.AddRange([1, 0, 0, 0]);
+        matchData.AddRange([128, 0, 0, 0]);
+
+        long refPosition;
+        while (true)
         {
-            Ar.ReadBoolean();
+            refPosition = Ar.Position;
+
+            var readData = Ar.ReadBytes(matchData.Count);
+            if (readData.SequenceEqual(matchData)) break;
+            
+            Ar.Position = refPosition + 1;
         }
 
-        Ar.Position += 4;
+        Ar.Position = refPosition;
     }
 }
