@@ -76,6 +76,15 @@ public class FMorphTargetLODModel
         }
         else
         {
+            if (Ar.Game == EGame.GAME_TheCastingofFrankStone)
+            {
+                Ar.Position += 4; // NumVertices
+                Vertices = [];
+                SectionIndices = Ar.ReadArray<int>();
+                bGeneratedByEngine = Ar.ReadBoolean();
+                return;
+            }
+
             var bVerticesAreStrippedForCookedBuilds = false;
             if (FUE5PrivateFrostyStreamObjectVersion.Get(Ar) >= FUE5PrivateFrostyStreamObjectVersion.Type.StripMorphTargetSourceDataForCookedBuilds)
             {
