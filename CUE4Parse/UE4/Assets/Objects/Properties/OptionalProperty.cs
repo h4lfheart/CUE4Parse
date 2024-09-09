@@ -15,6 +15,14 @@ public class OptionalProperty : FPropertyTagType<FPropertyTagType>
             throw new ParserException(Ar, "OptionalProperty needs inner type");
 
         //var version = Ar.Read<int>(); // TODO: version??
+        
+        var wasOptionalSet = Ar.ReadBoolean();
+        if (!wasOptionalSet)
+        {
+            Value = default;
+            return;
+        }
+
 
         Value = type switch
         {
