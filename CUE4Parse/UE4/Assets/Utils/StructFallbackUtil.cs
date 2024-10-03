@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Reflection;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Objects;
 
@@ -44,7 +46,18 @@ namespace CUE4Parse.UE4.Assets.Utils
     {
         public override void Map(IPropertyHolder src, object dst)
         {
-            // TODO
+            var fields = dst.GetType().GetFields();
+            foreach (var field in fields)
+            {
+                var attribute = field.GetCustomAttribute<UPropertyAttribute>();
+                if (attribute is null) continue;
+            
+                var name = attribute.PropertyName ?? field.Name;
+                if (src.Properties.FirstOrDefault(prop => prop.Name.Text.Equals(name)) 
+                    is not { } property) continue;
+            
+                field.SetValue(dst, property.Tag?.GetValue(field.FieldType));
+            }
         }
     }
 }

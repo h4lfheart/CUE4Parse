@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using CUE4Parse.MappingsProvider;
@@ -41,6 +42,11 @@ public interface IPropertyHolder
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetAllValues<T>(out T[] obj, string name);
+}
+
+public class UPropertyAttribute(string? propertyName = null) : Attribute
+{
+    public readonly string? PropertyName = propertyName;
 }
 
 [JsonConverter(typeof(UObjectConverter))]
@@ -108,14 +114,30 @@ public class UObject : IPropertyHolder
             ObjectGuid = Ar.Read<FGuid>();
         }
 
-        if (FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.SparseClassDataStructSerialization || !Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject))
-            return;
 
-        if (Class?.ExportType is { } type && type.EndsWith("BlueprintGeneratedClass"))
+        if (FUE5MainStreamObjectVersion.Get(Ar) >=
+            FUE5MainStreamObjectVersion.Type.SparseClassDataStructSerialization ||
+            !Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject))
         {
-            SerializedSparseClassDataStruct = new FPackageIndex(Ar).Load<UStruct>();
-            if (SerializedSparseClassDataStruct is null) return;
-            SerializedSparseClassData = new FStructFallback(Ar, SerializedSparseClassDataStruct);
+            if (Class?.ExportType is { } type && type.EndsWith("BlueprintGeneratedClass"))
+            {
+                SerializedSparseClassDataStruct = new FPackageIndex(Ar).Load<UStruct>();
+                if (SerializedSparseClassDataStruct is null) return;
+                SerializedSparseClassData = new FStructFallback(Ar, SerializedSparseClassDataStruct);
+            }
+        }
+        
+        var fields = GetType().GetFields();
+        foreach (var field in fields)
+        {
+            var attribute = field.GetCustomAttribute<UPropertyAttribute>();
+            if (attribute is null) continue;
+            
+            var name = attribute.PropertyName ?? field.Name;
+            if (Properties.FirstOrDefault(prop => prop.Name.Text.Equals(name)) 
+                is not { } property) continue;
+            
+            field.SetValue(this, property.Tag?.GetValue(field.FieldType));
         }
     }
 
