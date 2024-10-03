@@ -166,7 +166,7 @@ public class FStaticMeshRenderData
             }
         }
 
-        if (Ar.Game >= EGame.GAME_UE5_4) _ = Ar.Read<FStripDataFlags>();
+        if (Ar.Game is >= EGame.GAME_UE5_4 and not EGame.GAME_Fortnite_S27) _ = Ar.Read<FStripDataFlags>();
     }
 
     private void SerializeInlineDataRepresentations(FAssetArchive Ar)
