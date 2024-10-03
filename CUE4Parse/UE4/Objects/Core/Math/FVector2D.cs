@@ -34,6 +34,26 @@ namespace CUE4Parse.UE4.Objects.Core.Math
                 Y = Ar.Read<float>();
             }
         }
+        
+        public static FVector2D operator +(FVector2D a, FVector2D b)
+        {
+            return new FVector2D(a.X + b.X, a.Y + b.Y);
+        }
+        
+        public static FVector2D operator -(FVector2D a, FVector2D b)
+        {
+            return new FVector2D(a.X - b.X, a.Y - b.Y);
+        }
+        
+        public static FVector2D operator *(FVector2D a, FVector2D b)
+        {
+            return new FVector2D(a.X * b.X, a.Y * b.Y);
+        }
+        
+        public static FVector2D operator /(FVector2D a, FVector2D b)
+        {
+            return new FVector2D(a.X / b.X, a.Y / b.Y);
+        }
 
         public override string ToString() => $"X={X,3:F3} Y={Y,3:F3}";
     }

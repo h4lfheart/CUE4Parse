@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Numerics;
+using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.Writers;
@@ -56,7 +57,8 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
         public FVector4(FLinearColor color) : this(color.R, color.G, color.B, color.A) { }
 
-        public static explicit operator FVector(FVector4 v) => new FVector(v.X, v.Y, v.Z);
+        public static implicit operator FVector(FVector4 v) => new FVector(v.X, v.Y, v.Z);
+        public static implicit operator Vector4(FVector4 v) => new Vector4(v.X, v.Y, v.Z, v.W);
 
         public override string ToString() => $"X={X,3:F3} Y={Y,3:F3} Z={Z,3:F3} W={W,3:F3}";
     }
