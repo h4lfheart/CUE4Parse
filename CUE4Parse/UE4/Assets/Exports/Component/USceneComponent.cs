@@ -8,10 +8,20 @@ namespace CUE4Parse.UE4.Assets.Exports.Component;
 public class USceneComponent : UActorComponent
 {
     public FBoxSphereBounds? Bounds;
+    
+    public FVector RelativeLocation;
+    public FRotator RelativeRotation;
+    public FVector RelativeScale3D;
+
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
+        
+        RelativeLocation = GetOrDefault(nameof(RelativeLocation), FVector.ZeroVector);
+        RelativeRotation = GetOrDefault(nameof(RelativeRotation), FRotator.ZeroRotator);
+        RelativeScale3D = GetOrDefault(nameof(RelativeScale3D), FVector.OneVector);
+        
         var bComputeBoundsOnceForGame = GetOrDefault<bool>("bComputeBoundsOnceForGame");
         var bComputedBoundsOnceForGame = GetOrDefault<bool>("bComputedBoundsOnceForGame");
         var bComputeBounds = bComputeBoundsOnceForGame || bComputedBoundsOnceForGame;
