@@ -110,7 +110,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
                 if (bSerializeCompressedData)
                 {
-                    if (Ar.Game < EGame.GAME_UE4_23)
+                    if (Ar.Game is < EGame.GAME_UE4_23 and not EGame.GAME_Fortnite_S10)
                         SerializeCompressedData(Ar);
                     else if (Ar.Game < EGame.GAME_UE4_25)
                         SerializeCompressedData2(Ar);

@@ -248,7 +248,7 @@ public class FSkelMeshSection
 
         if (Ar.Game == EGame.GAME_Paragon) return;
 
-        if (Ar.Game < EGame.GAME_UE4_23 || !stripDataFlags.IsClassDataStripped(1)) // DuplicatedVertices, introduced in UE4.23
+        if (Ar.Game is < EGame.GAME_UE4_23 and not EGame.GAME_Fortnite_S10 || !stripDataFlags.IsClassDataStripped(1)) // DuplicatedVertices, introduced in UE4.23
         {
             Ar.SkipFixedArray(4); // DupVertData
             Ar.SkipFixedArray(8); // DupVertIndexData
