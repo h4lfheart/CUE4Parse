@@ -34,11 +34,26 @@ namespace CUE4Parse.UE4.Objects.Engine.Animation
     {
         public FTransform[] LocalSpacePose;
         public float[] CurveData;
+        public Dictionary<int, int> TrackToBufferIndex = [];
 
         public FPoseData(FStructFallback fallback)
         {
             LocalSpacePose = fallback.GetOrDefault<FTransform[]>(nameof(LocalSpacePose));
             CurveData = fallback.GetOrDefault<float[]>(nameof(CurveData));
+
+            var trackToBufferIndexMap = fallback.GetOrDefault<UScriptMap?>("TrackToBufferIndex");
+            if (trackToBufferIndexMap is not null)
+            {
+                foreach (var (key, value) in trackToBufferIndexMap.Properties)
+                {
+                    if (value is null) continue;
+                    
+                    var trackIndex = key.GetValue<int>();
+                    var bufferIndex = value.GetValue<int>();
+                
+                    TrackToBufferIndex[trackIndex] = bufferIndex;
+                }
+            }
         }
     }
 

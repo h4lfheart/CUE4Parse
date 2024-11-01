@@ -352,7 +352,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 }
             }
 
-            if (Ar.Game is >= EGame.GAME_UE4_23 or EGame.GAME_Fortnite_S10)
+            if (Ar.Game is >= EGame.GAME_UE4_23 or EGame.GAME_Fortnite_S10 or EGame.GAME_Fortnite_S9)
             {
                 var skinWeightProfilesData = new FSkinWeightProfilesData(Ar);
             }
