@@ -62,6 +62,7 @@ namespace CUE4Parse.GameTypes.FN.Assets.Exports
         RefactoredSubobjectSerialization,
         RemoveInvalidEventBindings,
         AddRedirectForPackageName,
+        AddedCreationVkSemanticVersion,
 
         VersionPlusOne,
         LatestVersion = VersionPlusOne - 1
@@ -361,6 +362,9 @@ namespace CUE4Parse.GameTypes.FN.Assets.Exports
             {
                 if (SaveVersion >= ELevelSaveRecordVersion.AddedLevelInstance)
                     Ar.Position += 1; // var _ = Ar.ReadByte(); // 2 almost? every time
+                
+                if (SaveVersion >= ELevelSaveRecordVersion.AddedCreationVkSemanticVersion)
+                    Ar.Position += 4; 
 
                 base.Deserialize(Ar, validPos);
 
