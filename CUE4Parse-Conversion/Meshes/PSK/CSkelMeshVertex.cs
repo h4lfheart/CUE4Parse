@@ -12,6 +12,9 @@ namespace CUE4Parse_Conversion.Meshes.PSK
         public CSkelMeshVertex(FVector position, FPackedNormal normal, FPackedNormal tangent, FMeshUVFloat uv) : base(position, normal, tangent, uv)
         {
         }
+        public CSkelMeshVertex(FVector position, FVector4 normal, FVector4 tangent, FMeshUVFloat uv) : base(position, normal, tangent, uv)
+        {
+        }
 
         public IReadOnlyList<BoneInfluence> Influences => _influences;
 
