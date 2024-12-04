@@ -45,7 +45,7 @@ public class FStaticMeshComponentLODInfo
     public FStaticMeshComponentLODInfo(FArchive Ar)
     {
         var stripFlags = new FStripDataFlags(Ar);
-        if (!stripFlags.IsDataStrippedForServer())
+        if (!stripFlags.IsAudioVisualDataStripped())
         {
             MapBuildDataId = Ar.Read<FGuid>();
             

@@ -4,7 +4,7 @@ namespace CUE4Parse.UE4.Versions
 {
     public enum EGame
     {
-        // bytes: 01.00.0N.NX : 01=UE4, 00=masked by GAME_ENGINE, NN=UE4 subversion, X=game (4 bits, 0=base engine)
+         // bytes: 01.00.0N.NX : 01=UE4, 00=masked by GAME_ENGINE, NN=UE4 subversion, X=game (4 bits, 0=base engine)
         GAME_UE4_0 = GameUtils.GameUe4Base + 0 << 4,
         GAME_UE4_1 = GameUtils.GameUe4Base + 1 << 4,
         GAME_UE4_2 = GameUtils.GameUe4Base + 2 << 4,
@@ -60,6 +60,7 @@ namespace CUE4Parse.UE4.Versions
             GAME_SYNCED = GAME_UE4_25 + 6,
             GAME_OperationApocalypse = GAME_UE4_25 + 7,
             GAME_Farlight84 = GAME_UE4_25 + 8,
+            GAME_StarWarsHunters = GAME_UE4_25 + 9,
         GAME_UE4_26 = GameUtils.GameUe4Base + 26 << 4,
             GAME_GTATheTrilogyDefinitiveEdition = GAME_UE4_26 + 1,
             GAME_ReadyOrNot = GAME_UE4_26 + 2,
@@ -75,6 +76,7 @@ namespace CUE4Parse.UE4.Versions
             GAME_DreamStar = GAME_UE4_26 + 12,
             GAME_MidnightSuns = GAME_UE4_26 + 13,
             GAME_FragPunk = GAME_UE4_26 + 14,
+            GAME_RacingMaster = GAME_UE4_26 + 15,
         GAME_UE4_27 = GameUtils.GameUe4Base + 27 << 4,
             GAME_Splitgate = GAME_UE4_27 + 1,
             GAME_HYENAS = GAME_UE4_27 + 2,
@@ -87,6 +89,8 @@ namespace CUE4Parse.UE4.Versions
             GAME_MortalKombat1 = GAME_UE4_27 + 9,
             GAME_VisionsofMana = GAME_UE4_27 + 10,
             GAME_Spectre = GAME_UE4_27 + 11,
+            GAME_KartRiderDrift = GAME_UE4_27 + 12,
+            GAME_ThroneAndLiberty = GAME_UE4_27 + 13,
         GAME_UE4_28 = GameUtils.GameUe4Base + 28 << 4,
 
         GAME_UE4_LATEST = GAME_UE4_28,
@@ -99,21 +103,25 @@ namespace CUE4Parse.UE4.Versions
             GAME_BlackMythWukong = GAME_UE5_0 + 2,
         GAME_UE5_1 = GameUtils.GameUe5Base + 1 << 4,
             GAME_3on3FreeStyleRebound = GAME_UE5_1 + 1,
-            GAME_InfinityNikki = GAME_UE5_1 + 2,
             GAME_TheCastingofFrankStone = GAME_UE5_1 + 3,
+            GAME_SilentHill2Remake = GAME_UE5_1 + 4,
         GAME_UE5_2 = GameUtils.GameUe5Base + 2 << 4,
             GAME_DeadByDaylight = GAME_UE5_2 + 1,
             GAME_PaxDei = GAME_UE5_2 + 2,
             GAME_TheFirstDescendant = GAME_UE5_2 + 3,
+            GAME_MetroAwakening = GAME_UE5_2 + 4,
         GAME_UE5_3 = GameUtils.GameUe5Base + 3 << 4,
             GAME_MarvelRivals = GAME_UE5_3 + 1,
             GAME_WildAssault = GAME_UE5_3 + 2,
             GAME_NobodyWantsToDie = GAME_UE5_3 + 3,
             GAME_MonsterJamShowdown = GAME_UE5_3 + 4,
             GAME_Rennsport = GAME_UE5_3 + 5,
+            GAME_AshesOfCreation = GAME_UE5_3 + 6,
         GAME_UE5_4 = GameUtils.GameUe5Base + 4 << 4,
             GAME_FunkoFusion = GAME_UE5_4 + 1,
             GAME_Fortnite_S27 = GAME_UE5_4 + 2,
+            GAME_InfinityNikki = GAME_UE5_4 + 3,
+            GAME_NevernessToEverness = GAME_UE5_4 + 4,
         GAME_UE5_5 = GameUtils.GameUe5Base + 5 << 4,
         GAME_UE5_6 = GameUtils.GameUe5Base + 6 << 4,
 

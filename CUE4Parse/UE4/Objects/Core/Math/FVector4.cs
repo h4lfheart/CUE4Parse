@@ -19,6 +19,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public readonly float W;
 
         public static readonly FVector4 ZeroVector = new(0, 0, 0, 0);
+        public static readonly FVector4 OneVector = new(1, 1, 1, 1);
 
         public FVector4(float x, float y, float z, float w)
         {

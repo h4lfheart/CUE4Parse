@@ -28,7 +28,7 @@ public class USkeletalMesh : UObject
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
-        Materials = Array.Empty<ResolvedObject>();
+        Materials = [];
 
         bHasVertexColors = GetOrDefault<bool>(nameof(bHasVertexColors));
         NumVertexColorChannels = GetOrDefault<byte>(nameof(NumVertexColorChannels));
@@ -162,7 +162,7 @@ public class USkeletalMesh : UObject
 
             for (int j = 0; j < morphLODModels.Length; j++)
             {
-                if (morphLODModels[j].Vertices.Length > 0) continue;
+                if (morphLODModels[j].Vertices.Length > 0 || morphLODModels[j].NumBaseMeshVerts == 0 || morphLODModels[j].SectionIndices.Length == 0) continue;
                 morphLODModels[j] = new FMorphTargetLODModel(LODModels[j].MorphTargetVertexInfoBuffers!, index, morphLODModels[j].SectionIndices);
             }
 

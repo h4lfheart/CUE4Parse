@@ -76,7 +76,7 @@ public class FSkelMeshSection
             var dummyChunkIndex = Ar.Read<ushort>();
         }
 
-        if (!stripDataFlags.IsDataStrippedForServer())
+        if (!stripDataFlags.IsAudioVisualDataStripped())
         {
             BaseIndex = Ar.Read<int>();
             NumTriangles = Ar.Read<int>();
@@ -118,7 +118,7 @@ public class FSkelMeshSection
 
         if (skelMeshVer >= FSkeletalMeshCustomVersion.Type.CombineSectionWithChunk)
         {
-            if (!stripDataFlags.IsDataStrippedForServer())
+            if (!stripDataFlags.IsAudioVisualDataStripped())
             {
                 BaseVertexIndex = Ar.Read<uint>();
             }
@@ -264,7 +264,7 @@ public class FSkelMeshSection
             case EGame.GAME_OutlastTrials:
                 Ar.Position += 1;
                 break;
-            case EGame.GAME_RogueCompany or EGame.GAME_BladeAndSoul or EGame.GAME_SYNCED:
+            case EGame.GAME_RogueCompany or EGame.GAME_BladeAndSoul or EGame.GAME_SYNCED or EGame.GAME_StarWarsHunters:
                 Ar.Position += 4;
                 break;
             case EGame.GAME_CalabiYau or EGame.GAME_FragPunk:

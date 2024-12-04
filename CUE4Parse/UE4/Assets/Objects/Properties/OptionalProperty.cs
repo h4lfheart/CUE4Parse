@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
@@ -15,7 +15,7 @@ public class OptionalProperty : FPropertyTagType<FPropertyTagType>
         if (tagData.InnerType == null)
             throw new ParserException(Ar, "OptionalProperty needs inner type");
 
-        //var version = Ar.Read<int>(); // TODO: version??
+        if (Ar.Game is >= EGame.GAME_UE5_4 and < EGame.GAME_UE5_5) _ = Ar.Read<int>();
 
         var wasOptionalSet = Ar.Game >= EGame.GAME_UE5_5 && Ar.ReadBoolean();
         if (!wasOptionalSet)

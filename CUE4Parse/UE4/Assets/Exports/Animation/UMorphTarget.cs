@@ -28,6 +28,8 @@ public class FMorphTargetDelta
             TangentZDelta = Ar.Read<FVector>();
         }
         SourceIdx = Ar.Read<uint>();
+
+        if (Ar.Game == EGame.GAME_StarWarsHunters) Ar.Position += 4;
     }
 
     public FMorphTargetDelta(FVector pos, FVector tan, uint index)
@@ -166,7 +168,7 @@ public class UMorphTarget : UObject
         }
 
         var stripData = Ar.Read<FStripDataFlags>();
-        if (!stripData.IsDataStrippedForServer())
+        if (!stripData.IsAudioVisualDataStripped())
         {
             MorphLODModels = Ar.ReadArray(() => new FMorphTargetLODModel(Ar));
         }

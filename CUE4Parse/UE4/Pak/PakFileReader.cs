@@ -58,7 +58,7 @@ namespace CUE4Parse.UE4.Pak
             : this(file.FullName, file.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite), versions) {}
         public PakFileReader(string filePath, Stream stream, VersionContainer? versions = null)
             : this(new FStreamArchive(filePath, stream, versions)) {}
-        public PakFileReader(string filePath, IRandomAccessStream stream, VersionContainer? versions = null)
+        public PakFileReader(string filePath, RandomAccessStream stream, VersionContainer? versions = null)
             : this(new FRandomAccessStreamArchive(filePath, stream, versions)) {}
 
         public override byte[] Extract(VfsEntry entry)
@@ -305,7 +305,7 @@ namespace CUE4Parse.UE4.Pak
         private void ReadFrozenIndex(bool caseInsensitive)
         {
             this.Ar.Position = Info.IndexOffset;
-            var Ar = new FMemoryImageArchive(new FByteArchive("FPakFileData", this.Ar.ReadBytes((int) Info.IndexSize)));
+            var Ar = new FMemoryImageArchive(new FByteArchive("FPakFileData", this.Ar.ReadBytes((int) Info.IndexSize)), 8);
 
             var mountPoint = Ar.ReadFString();
             ValidateMountPoint(ref mountPoint);
@@ -359,7 +359,8 @@ namespace CUE4Parse.UE4.Pak
         {
             var reader = IsConcurrent ? (FArchive) Ar.Clone() : Ar;
             reader.Position = Info.IndexOffset;
-            return reader.ReadBytes((4 + MAX_MOUNTPOINT_TEST_LENGTH * 2).Align(Aes.ALIGN));
+            var size = Math.Min((int) Info.IndexSize, 4 + MAX_MOUNTPOINT_TEST_LENGTH * 2);
+            return reader.ReadBytes(size.Align(Aes.ALIGN));
         }
 
         public override void Dispose()
