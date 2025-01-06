@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 
 using CUE4Parse.Encryption.Aes;
@@ -207,15 +208,14 @@ namespace CUE4Parse.UE4.IO
             throw new KeyNotFoundException($"Couldn't find chunk {chunkId} in IoStore {Name}");
         }
 
-        private byte[] Read(long offset, long length)
+        private void ReadGeneric(long offset, long length, Action<byte[], long, long, long, long> copyData)
         {
             var compressionBlockSize = TocResource.Header.CompressionBlockSize;
-            var dst = new byte[length];
             var firstBlockIndex = (int) (offset / compressionBlockSize);
-            var lastBlockIndex = (int) (((offset + dst.Length).Align((int) compressionBlockSize) - 1) / compressionBlockSize);
+            var lastBlockIndex = (int) (((offset + length).Align((int) compressionBlockSize) - 1) / compressionBlockSize);
             var offsetInBlock = offset % compressionBlockSize;
             var remainingSize = length;
-            var dstOffset = 0;
+            var dstOffset = 0L;
 
             var compressedBuffer = Array.Empty<byte>();
             var uncompressedBuffer = Array.Empty<byte>();
@@ -269,12 +269,35 @@ namespace CUE4Parse.UE4.IO
                     src = uncompressedBuffer;
                 }
 
-                var sizeInBlock = (int) Math.Min(compressionBlockSize - offsetInBlock, remainingSize);
-                Buffer.BlockCopy(src, (int) offsetInBlock, dst, dstOffset, sizeInBlock);
+                var sizeInBlock = Math.Min(compressionBlockSize - offsetInBlock, remainingSize);
+                copyData(src, offsetInBlock, sizeInBlock, dstOffset, remainingSize);
                 offsetInBlock = 0;
                 remainingSize -= sizeInBlock;
                 dstOffset += sizeInBlock;
             }
+        }
+
+        private byte[] Read(long offset, long length)
+        {
+            var dst = new byte[length];
+            ReadGeneric(offset, length, (src, offsetInBlock, sizeInBlock, dstOffset, remainingSize) =>
+            {
+                Buffer.BlockCopy(src, (int) offsetInBlock, dst, (int) dstOffset, (int) sizeInBlock);
+            });
+
+            return dst;
+        }
+        
+        public unsafe byte* ReadToPtr(long offset, long length)
+        {
+            var dst = (byte*) NativeMemory.Alloc((UIntPtr)length);
+            ReadGeneric(offset, length, (src, offsetInBlock, sizeInBlock, dstOffset, remainingSize) =>
+            {
+                fixed (byte* srcPtr = src)
+                {
+                    Buffer.MemoryCopy(srcPtr + offsetInBlock, dst + dstOffset, remainingSize, sizeInBlock);
+                }
+            });
 
             return dst;
         }
