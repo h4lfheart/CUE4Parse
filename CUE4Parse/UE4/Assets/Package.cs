@@ -14,17 +14,18 @@ using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
-using Newtonsoft.Json;
 using Serilog;
 
 namespace CUE4Parse.UE4.Assets
 {
     [SkipObjectRegistration]
-    [JsonConverter(typeof(PackageConverter))]
     public sealed class Package : AbstractUePackage
     {
         public override FPackageFileSummary Summary { get; }
         public override FNameEntrySerialized[] NameMap { get; }
+        public override int ImportMapLength => ImportMap.Length;
+        public override int ExportMapLength => ExportMap.Length;
+
         public FObjectImport[] ImportMap { get; }
         public FObjectExport[] ExportMap { get; }
         public FPackageIndex[][]? DependsMap { get; }
@@ -279,6 +280,7 @@ namespace CUE4Parse.UE4.Assets
             {
                 "Class" => new(() => new UScriptClass(Name.Text)),
                 "SharpClass" => new(() => new USharpClass(Name.Text)),
+                "PythonClass" => new(() => new UPythonClass(Name.Text)),
                 _ => null
             };
         }
@@ -388,7 +390,7 @@ namespace CUE4Parse.UE4.Assets
             {
                 Trace.Assert(_phase == LoadPhase.Create);
                 _phase = LoadPhase.Serialize;
-                _object = ConstructObject(_package.ResolvePackageIndex(_export.ClassIndex)?.Object?.Value as UStruct, _package, (EObjectFlags) _export.ObjectFlags);
+                _object = _package.ConstructObject(_package.ResolvePackageIndex(_export.ClassIndex)?.Object?.Value as UStruct, _package, (EObjectFlags) _export.ObjectFlags);
                 _object.Name = _export.ObjectName.Text;
                 if (!_export.OuterIndex.IsNull)
                 {
@@ -410,7 +412,7 @@ namespace CUE4Parse.UE4.Assets
                 _phase = LoadPhase.Complete;
                 var Ar = (FAssetArchive) _archive.Clone();
                 Ar.SeekAbsolute(_export.SerialOffset, SeekOrigin.Begin);
-                DeserializeObject(_object, Ar, _export.SerialSize);
+                _package.DeserializeObject(_object, Ar, _export.SerialSize);
                 // TODO right place ???
                 _object.Flags |= EObjectFlags.RF_LoadCompleted;
                 _object.PostLoad();

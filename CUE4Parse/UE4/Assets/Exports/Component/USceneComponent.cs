@@ -12,6 +12,8 @@ public class USceneComponent : UActorComponent
     public FVector RelativeLocation;
     public FRotator RelativeRotation;
     public FVector RelativeScale3D;
+    
+    public bool bIsCooked;
 
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
@@ -27,7 +29,9 @@ public class USceneComponent : UActorComponent
         var bComputeBounds = bComputeBoundsOnceForGame || bComputedBoundsOnceForGame;
         if (bComputeBounds && FUE5PrivateFrostyStreamObjectVersion.Get(Ar) >= FUE5PrivateFrostyStreamObjectVersion.Type.SerializeSceneComponentStaticBounds)
         {
-            Bounds = Ar.ReadBoolean() ? new FBoxSphereBounds(Ar) : null;
+            bIsCooked = Ar.ReadBoolean();
+            if (bIsCooked)
+                Bounds = new FBoxSphereBounds(Ar);
         }
     }
 

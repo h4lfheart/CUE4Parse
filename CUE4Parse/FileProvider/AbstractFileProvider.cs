@@ -30,7 +30,7 @@ namespace CUE4Parse.FileProvider
 {
     public class CustomConfigIni : ConfigIni
     {
-        public FGuid EncryptionKeyGuid { get; set; }
+        public FGuid? EncryptionKeyGuid { get; set; }
 
         public CustomConfigIni(string name) : base(name) { }
     }
@@ -50,6 +50,7 @@ namespace CUE4Parse.FileProvider
         public abstract IReadOnlyDictionary<FPackageId, GameFile> FilesById { get; }
         public virtual bool IsCaseInsensitive { get; } // fabian? is this reversed?
         public bool ReadScriptData { get; set; }
+        public bool ReadShaderMaps { get; set; }
         public bool SkipReferencedTextures { get; set; }
         public bool UseLazySerialization { get; set; } = true;
 

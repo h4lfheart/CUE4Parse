@@ -89,7 +89,7 @@ public class UObject : IPropertyHolder
 
     public UObject()
     {
-        Properties = new List<FPropertyTag>();
+        Properties = [];
     }
 
     public UObject(List<FPropertyTag> properties)
