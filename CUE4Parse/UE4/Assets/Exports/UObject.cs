@@ -45,6 +45,48 @@ public interface IPropertyHolder
     public bool TryGetAllValues<T>(out T[] obj, string name);
 }
 
+public abstract class AbstractPropertyHolder : IPropertyHolder
+{
+    public List<FPropertyTag> Properties { get; protected set; } = new();
+    public T GetOrDefault<T>(string name, T defaultValue = default!, StringComparison comparisonType = StringComparison.Ordinal) =>
+        PropertyUtil.GetOrDefault(this, name, defaultValue, comparisonType);
+    public Lazy<T> GetOrDefaultLazy<T>(string name, T defaultValue = default!, StringComparison comparisonType = StringComparison.Ordinal) =>
+        PropertyUtil.GetOrDefaultLazy(this, name, defaultValue, comparisonType);
+    public T Get<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) =>
+        PropertyUtil.Get<T>(this, name, comparisonType);
+    public Lazy<T> GetLazy<T>(string name, StringComparison comparisonType = StringComparison.Ordinal) =>
+        PropertyUtil.GetLazy<T>(this, name, comparisonType);
+    public T GetByIndex<T>(int index) => PropertyUtil.GetByIndex<T>(this, index);
+    public bool TryGetValue<T>(out T obj, params string[] names)
+    {
+        foreach (string name in names)
+        {
+            if (this.TryGet<T>(name, out obj, comparisonType: StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+        obj = default!;
+        return false;
+    }
+    public bool TryGetAllValues<T>(out T[] obj, string name)
+    {
+        var maxIndex = -1;
+        var collected = new List<FPropertyTag>();
+        foreach (var prop in Properties)
+        {
+            if (prop.Name.Text != name) continue;
+            collected.Add(prop);
+            maxIndex = Math.Max(maxIndex, prop.ArrayIndex);
+        }
+        obj = new T[maxIndex + 1];
+        foreach (var prop in collected) {
+            obj[prop.ArrayIndex] = (T)prop.Tag?.GetValue(typeof(T))!;
+        }
+        return obj.Length > 0;
+    }
+}
+
 public class UPropertyAttribute(string? propertyName = null) : Attribute
 {
     public readonly string? PropertyName = propertyName;
@@ -52,7 +94,7 @@ public class UPropertyAttribute(string? propertyName = null) : Attribute
 
 [JsonConverter(typeof(UObjectConverter))]
 [SkipObjectRegistration]
-public class UObject : IPropertyHolder
+public class UObject : AbstractPropertyHolder
 {
     public string Name { get; set; } = null!;
     public UObject? Outer;
