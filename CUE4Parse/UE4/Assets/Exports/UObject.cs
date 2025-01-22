@@ -101,7 +101,6 @@ public class UObject : AbstractPropertyHolder
     public UStruct? Class;
     public ResolvedObject? Super;
     public ResolvedObject? Template;
-    public List<FPropertyTag> Properties { get; private set; }
     public FGuid? ObjectGuid { get; private set; }
     public EObjectFlags Flags;
     public UStruct? SerializedSparseClassDataStruct;
