@@ -34,7 +34,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
             else
             {
                 if (Ar.Ver >= EUnrealEngineObjectUE4Version.MOVE_SKELETALMESH_SHADOWCASTING)
-                    Ar.Position += 4;
+                    _ = Ar.ReadBoolean(); // bEnableShadowCasting_DEPRECATED
 
                 if (FRecomputeTangentCustomVersion.Get(Ar) >= FRecomputeTangentCustomVersion.Type.RuntimeRecomputeTangent)
                 {
