@@ -541,7 +541,7 @@ namespace CUE4Parse.FileProvider
         public IPackage LoadPackage(string path) => LoadPackage(this[path]);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IPackage LoadPackage(GameFile file) => LoadPackageAsync(file).Result;
+        public IPackage LoadPackage(GameFile file) => Task.Run(async () => await LoadPackageAsync(file).ConfigureAwait(false)).Result;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<IPackage> LoadPackageAsync(string path) => LoadPackageAsync(this[path]);
@@ -599,7 +599,7 @@ namespace CUE4Parse.FileProvider
         public IReadOnlyDictionary<string, byte[]> SavePackage(string path) => SavePackage(this[path]);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IReadOnlyDictionary<string, byte[]> SavePackage(GameFile file) => SavePackageAsync(file).Result;
+        public IReadOnlyDictionary<string, byte[]> SavePackage(GameFile file) => Task.Run(async () => await SavePackageAsync(file).ConfigureAwait(false)).Result;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<IReadOnlyDictionary<string, byte[]>> SavePackageAsync(string path)
@@ -655,7 +655,7 @@ namespace CUE4Parse.FileProvider
         public UObject LoadPackageObject(string path) => LoadPackageObject<UObject>(path);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T LoadPackageObject<T>(string path) where T : UObject => LoadPackageObjectAsync<T>(path).Result;
+        public T LoadPackageObject<T>(string path) where T : UObject => Task.Run(async () => await LoadPackageObjectAsync<T>(path).ConfigureAwait(false)).Result;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<UObject> LoadPackageObjectAsync(string path)
@@ -746,7 +746,7 @@ namespace CUE4Parse.FileProvider
 
         [Obsolete("use LoadPackage().GetExports() instead")]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IEnumerable<UObject> LoadPackageObjects(string path) => LoadPackageObjectsAsync(path).Result;
+        public IEnumerable<UObject> LoadPackageObjects(string path) => Task.Run(async () => await LoadPackageObjectsAsync(path).ConfigureAwait(false)).Result;
 
         [Obsolete("use LoadPackageAsync().GetExports() instead")]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
