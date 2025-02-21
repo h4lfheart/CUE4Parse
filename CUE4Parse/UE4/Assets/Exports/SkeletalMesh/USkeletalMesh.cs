@@ -142,12 +142,6 @@ public partial class USkeletalMesh : UObject
     {
         if (LODModels is null || MorphTargets.Length == 0) return;
 
-        if (Owner?.Provider?.Versions.Game is EGame.GAME_MortalKombat1)
-        {
-            PopulateMorphTargetVerticesDataMK1();
-            return;
-        }
-
         var maxLodLevel = -1;
         for (int i = 0; i < LODModels.Length; i++)
         {
