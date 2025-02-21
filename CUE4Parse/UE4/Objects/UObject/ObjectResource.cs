@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using CUE4Parse.UE4.Assets;
@@ -117,12 +118,12 @@ namespace CUE4Parse.UE4.Objects.UObject
         public UExport? Load() => ResolvedObject?.Load();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryLoad(out UExport? export)
+        public bool TryLoad([MaybeNullWhen(false)] out UExport export)
         {
             if (ResolvedObject != null)
                 return ResolvedObject.TryLoad(out export);
 
-            export = default;
+            export = null;
             return false;
         }
 
@@ -192,7 +193,6 @@ namespace CUE4Parse.UE4.Objects.UObject
         public int CreateBeforeCreateDependencies;
         public long ScriptSerializationStartOffset;
         public long ScriptSerializationEndOffset;
-        public Lazy<UExport> ExportObject;
 
         public string ClassName;
 

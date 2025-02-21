@@ -15,18 +15,23 @@ namespace CUE4Parse.UE4.IO.Objects
         public readonly short _pad0;
         public readonly byte _pad1;
     }
-    
+
     [StructLayout(LayoutKind.Sequential)]
     public readonly struct FBulkDataCookedIndex
     {
         public static FBulkDataCookedIndex Default => new(0);
+
         public readonly byte Value;
+
         public bool IsDefault => Value == 0;
+
         public FBulkDataCookedIndex(byte value)
         {
             Value = value;
         }
+
         public string GetAsExtension() => IsDefault ? string.Empty : Value.ToString("D3");
+
         public override string ToString() => GetAsExtension();
     }
 }

@@ -2,14 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using CUE4Parse.FileProvider;
 using CUE4Parse.GameTypes.ACE7.Encryption;
-using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
-using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -31,15 +28,41 @@ namespace CUE4Parse.UE4.Assets
         public FPackageIndex[][]? DependsMap { get; }
         public FPackageIndex[]? PreloadDependencies { get; }
         public FObjectDataResource[]? DataResourceMap { get; }
-        public override Lazy<UObject>[] ExportsLazy => ExportMap.Select(it => it.ExportObject).ToArray();
-        public override bool IsFullyLoaded { get; } = false;
+
         private ExportLoader[] _exportLoaders; // Nonnull if useLazySerialization is false
 
-        public Package(FArchive uasset, FArchive? uexp, Lazy<FArchive?>? ubulk = null, Lazy<FArchive?>? uptnl = null, IFileProvider? provider = null, TypeMappings? mappings = null, bool useLazySerialization = true)
-            : base(uasset.Name.SubstringBeforeLast('.'), provider, mappings)
+        public Package(FArchive uasset, FArchive? uexp, FArchive? ubulk = null, FArchive? uptnl = null, IFileProvider? provider = null, bool useLazySerialization = true)
+            : this(
+                uasset,
+                uexp,
+                ubulk != null ? new Lazy<FArchive?>(() => ubulk) : null,
+                uptnl != null ? new Lazy<FArchive?>(() => uptnl) : null,
+                provider,
+                useLazySerialization)
+        { }
+
+        public Package(string name, byte[] uasset, byte[]? uexp, byte[]? ubulk = null, byte[]? uptnl = null, IFileProvider? provider = null, bool useLazySerialization = true)
+            : this(
+                new FByteArchive($"{name}.uasset", uasset),
+                uexp != null ? new FByteArchive($"{name}.uexp", uexp) : null,
+                ubulk != null ? new FByteArchive($"{name}.ubulk", ubulk) : null,
+                uptnl != null ? new FByteArchive($"{name}.uptnl", uptnl) : null,
+                provider,
+                useLazySerialization)
+        { }
+
+        public Package(
+            FArchive uasset,
+            FArchive? uexp,
+            Lazy<FArchive?>? ubulk = null,
+            Lazy<FArchive?>? uptnl = null,
+            IFileProvider? provider = null,
+            bool useLazySerialization = true)
+            : base(uasset.Name.SubstringBeforeLast('.'), provider)
         {
             // We clone the version container because it can be modified with package specific versions when reading the summary
             uasset.Versions = (VersionContainer) uasset.Versions.Clone();
+
             FAssetArchive uassetAr;
             ACE7XORKey? xorKey = null;
             ACE7Decrypt? decryptor = null;
@@ -49,6 +72,7 @@ namespace CUE4Parse.UE4.Assets
                 uassetAr = new FAssetArchive(decryptor.DecryptUassetArchive(uasset, out xorKey), this);
             }
             else uassetAr = new FAssetArchive(uasset, this);
+
             Summary = new FPackageFileSummary(uassetAr);
 
             uassetAr.SeekAbsolute(Summary.NameOffset, SeekOrigin.Begin);
@@ -61,15 +85,16 @@ namespace CUE4Parse.UE4.Assets
 
             uassetAr.SeekAbsolute(Summary.ExportOffset, SeekOrigin.Begin);
             ExportMap = new FObjectExport[Summary.ExportCount]; // we need this to get its final size in some case
+            ExportsLazy = new Lazy<UObject>[Summary.ExportCount];
             uassetAr.ReadArray(ExportMap, () => new FObjectExport(uassetAr));
 
-            if (!useLazySerialization && Summary.DependsOffset > 0 && Summary.ExportCount > 0)
+            if (!useLazySerialization && Summary is { DependsOffset: > 0, ExportCount: > 0 })
             {
                 uassetAr.SeekAbsolute(Summary.DependsOffset, SeekOrigin.Begin);
                 DependsMap = uassetAr.ReadArray(Summary.ExportCount, () => uassetAr.ReadArray(() => new FPackageIndex(uassetAr)));
             }
 
-            if (!useLazySerialization && Summary.PreloadDependencyCount > 0 && Summary.PreloadDependencyOffset > 0)
+            if (!useLazySerialization && Summary is { PreloadDependencyCount: > 0, PreloadDependencyOffset: > 0 })
             {
                 uassetAr.SeekAbsolute(Summary.PreloadDependencyOffset, SeekOrigin.Begin);
                 PreloadDependencies = uassetAr.ReadArray(Summary.PreloadDependencyCount, () => new FPackageIndex(uassetAr));
@@ -79,11 +104,13 @@ namespace CUE4Parse.UE4.Assets
             {
                 uassetAr.SeekAbsolute(Summary.DataResourceOffset, SeekOrigin.Begin);
                 var dataResourceVersion = (EObjectDataResourceVersion) uassetAr.Read<uint>();
-                if (dataResourceVersion > EObjectDataResourceVersion.Invalid && dataResourceVersion <= EObjectDataResourceVersion.Latest)
+                if (dataResourceVersion is > EObjectDataResourceVersion.Invalid and <= EObjectDataResourceVersion.Latest)
                 {
                     DataResourceMap = uassetAr.ReadArray(() => new FObjectDataResource(uassetAr));
                 }
             }
+
+            if (!CanDeserialize) return;
 
             FAssetArchive uexpAr;
             if (uexp != null)
@@ -108,14 +135,12 @@ namespace CUE4Parse.UE4.Assets
                 uexpAr.AddPayload(PayloadType.UPTNL, offset, uptnl);
             }
 
-            if (HasFlags(EPackageFlags.PKG_UnversionedProperties) && mappings == null)
-                throw new ParserException("Package has unversioned properties but mapping file is missing, can't serialize");
-
             if (useLazySerialization)
             {
-                foreach (var export in ExportMap)
+                for (var i = 0; i < ExportsLazy.Length; i++)
                 {
-                    export.ExportObject = new Lazy<UObject>(() =>
+                    var export = ExportMap[i];
+                    ExportsLazy[i] = new Lazy<UObject>(() =>
                     {
                         // Create
                         var obj = ConstructObject(ResolvePackageIndex(export.ClassIndex)?.Object?.Value as UStruct, this, (EObjectFlags) export.ObjectFlags);
@@ -141,36 +166,24 @@ namespace CUE4Parse.UE4.Assets
                 _exportLoaders = new ExportLoader[ExportMap.Length];
                 for (var i = 0; i < ExportMap.Length; i++)
                 {
-                    _exportLoaders[i] = new(this, ExportMap[i], uexpAr);
+                    _exportLoaders[i] = new(this, i, uexpAr);
                 }
             }
 
             IsFullyLoaded = true;
         }
 
-        public Package(FArchive uasset, FArchive? uexp, FArchive? ubulk = null, FArchive? uptnl = null,
-            IFileProvider? provider = null, TypeMappings? mappings = null, bool useLazySerialization = true)
-            : this(uasset, uexp, ubulk != null ? new Lazy<FArchive?>(() => ubulk) : null,
-                uptnl != null ? new Lazy<FArchive?>(() => uptnl) : null, provider, mappings, useLazySerialization) { }
-
-        public Package(string name, byte[] uasset, byte[]? uexp, byte[]? ubulk = null, byte[]? uptnl = null, IFileProvider? provider = null, bool useLazySerialization = true)
-            : this(new FByteArchive($"{name}.uasset", uasset), uexp != null ? new FByteArchive($"{name}.uexp", uexp) : null,
-                ubulk != null ? new FByteArchive($"{name}.ubulk", ubulk) : null,
-                uptnl != null ? new FByteArchive($"{name}.uptnl", uptnl) : null, provider, null, useLazySerialization) { }
-
-        public override UObject? GetExportOrNull(string name, StringComparison comparisonType = StringComparison.Ordinal)
+        public override int GetExportIndex(string name, StringComparison comparisonType = StringComparison.Ordinal)
         {
-            try
+            for (var i = 0; i < ExportMap.Length; i++)
             {
-                return ExportMap
-                    .FirstOrDefault(it => it.ObjectName.Text.Equals(name, comparisonType))?.ExportObject
-                    .Value;
+                if (ExportMap[i].ObjectName.Text.Equals(name, comparisonType))
+                {
+                    return i;
+                }
             }
-            catch (Exception e)
-            {
-                Log.Debug(e, "Failed to get export object");
-                return null;
-            }
+
+            return -1;
         }
 
         public override ResolvedObject? ResolvePackageIndex(FPackageIndex? index)
@@ -260,7 +273,6 @@ namespace CUE4Parse.UE4.Assets
             public override ResolvedObject Outer => Package.ResolvePackageIndex(_export.OuterIndex) ?? new ResolvedLoadedObject((UObject) Package);
             public override ResolvedObject? Class => Package.ResolvePackageIndex(_export.ClassIndex);
             public override ResolvedObject? Super => Package.ResolvePackageIndex(_export.SuperIndex);
-            public override Lazy<UObject> Object => _export.ExportObject;
         }
 
         /** Fallback if we cannot resolve the export in another package */
@@ -295,17 +307,17 @@ namespace CUE4Parse.UE4.Assets
             private LoadPhase _phase = LoadPhase.Create;
             public Lazy<UObject> Lazy;
 
-            public ExportLoader(Package package, FObjectExport export, FAssetArchive archive)
+            public ExportLoader(Package package, int index, FAssetArchive archive)
             {
                 _package = package;
-                _export = export;
+                _export = package.ExportMap[index];
                 _archive = archive;
                 Lazy = new(() =>
                 {
                     Fire(LoadPhase.Serialize);
                     return _object;
                 });
-                export.ExportObject = Lazy;
+                package.ExportsLazy[index] = Lazy;
             }
 
             private void EnsureDependencies()

@@ -36,7 +36,6 @@ namespace CUE4Parse.UE4.IO
         public override FGuid EncryptionKeyGuid => TocResource.Header.EncryptionKeyGuid;
         public override bool IsEncrypted => TocResource.Header.ContainerFlags.HasFlag(EIoContainerFlags.Encrypted);
 
-
         public IoStoreReader(string tocPath, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, VersionContainer? versions = null)
             : this(new FileInfo(tocPath), readOptions, versions) { }
         public IoStoreReader(FileInfo utocFile, EIoStoreTocReadOptions readOptions = EIoStoreTocReadOptions.ReadDirectoryIndex, VersionContainer? versions = null)
@@ -113,7 +112,7 @@ namespace CUE4Parse.UE4.IO
 #endif
             if (TocResource.Header.Version > EIoStoreTocVersion.Latest)
             {
-                log.Warning("Io Store \"{0}\" has unsupported version {1}", Path, (int) TocResource.Header.Version);
+                Log.Warning("Io Store \"{0}\" has unsupported version {1}", Path, (int) TocResource.Header.Version);
             }
         }
 
@@ -302,12 +301,12 @@ namespace CUE4Parse.UE4.IO
             return dst;
         }
 
-        public override IReadOnlyDictionary<string, GameFile> Mount(bool caseInsensitive = false)
+        public override void Mount(StringComparer pathComparer)
         {
             var watch = new Stopwatch();
             watch.Start();
 
-            ProcessIndex(caseInsensitive);
+            ProcessIndex(pathComparer);
             if (Game >= EGame.GAME_UE5_0) // We can safely skip reading container header on UE4
             {
                 ContainerHeader = ReadContainerHeader();
@@ -321,14 +320,13 @@ namespace CUE4Parse.UE4.IO
                     sb.Append($" ({EncryptedFileCount} encrypted)");
                 if (MountPoint.Contains("/"))
                     sb.Append($", mount point: \"{MountPoint}\"");
+                sb.Append($", order {ReadOrder}");
                 sb.Append($", version {(int) TocResource.Header.Version} in {elapsed}");
-                log.Information(sb.ToString());
+                Log.Information(sb.ToString());
             }
-
-            return Files;
         }
 
-        private void ProcessIndex(bool caseInsensitive)
+        private void ProcessIndex(StringComparer pathComparer)
         {
             if (!HasDirectoryIndex || TocResource.DirectoryIndexBuffer == null) throw new ParserException("No directory index");
             var directoryIndex = new FByteArchive(Path, DecryptIfEncrypted(TocResource.DirectoryIndexBuffer));
@@ -350,7 +348,7 @@ namespace CUE4Parse.UE4.IO
             var fileEntries = directoryIndex.ReadArray<FIoFileIndexEntry>();
             var stringTable = directoryIndex.ReadArray(directoryIndex.ReadFString);
 
-            var files = new Dictionary<string, GameFile>(fileEntries.Length);
+            var files = new Dictionary<string, GameFile>(fileEntries.Length, pathComparer);
             ReadIndex(MountPoint, 0U);
 
             void ReadIndex(string directoryName, uint dir)
@@ -369,12 +367,8 @@ namespace CUE4Parse.UE4.IO
 
                         var path = string.Concat(subDirectoryName, stringTable[fileEntry.Name]);
                         var entry = new FIoStoreEntry(this, path, fileEntry.UserData);
-                        if (entry.IsEncrypted)
-                            EncryptedFileCount++;
-                        if (caseInsensitive)
-                            files[path.ToLowerInvariant()] = entry;
-                        else
-                            files[path] = entry;
+                        if (entry.IsEncrypted) EncryptedFileCount++;
+                        files[path] = entry;
 
                         file = fileEntry.NextFileEntry;
                     }
@@ -395,7 +389,7 @@ namespace CUE4Parse.UE4.IO
         }
 
         public override byte[] MountPointCheckBytes() => TocResource.DirectoryIndexBuffer ?? new byte[MAX_MOUNTPOINT_TEST_LENGTH];
-        protected override byte[] ReadAndDecrypt(int length) => throw new InvalidOperationException("Io Store can't read bytes without context"); //ReadAndDecrypt(length, Ar, IsEncrypted);
+        protected override byte[] ReadAndDecrypt(int length) => throw new InvalidOperationException("IoStore can't read bytes without context"); //ReadAndDecrypt(length, Ar, IsEncrypted);
 
         public override void Dispose()
         {

@@ -237,6 +237,7 @@ namespace CUE4Parse.UE4.Versions
                 < EGame.GAME_UE5_2 => Type.EventSpawnsUpdateInitialAttributeValues,
                 < EGame.GAME_UE5_3 => Type.DynamicPinNodeFixup,
                 < EGame.GAME_UE5_4 => Type.RibbonRendererLinkOrderDefaultIsUniqueID,
+                < EGame.GAME_UE5_5 => Type.NDCSpawnGroupOverrideDisabledByDefault,
                 _ => Type.LatestVersion
             };
         }

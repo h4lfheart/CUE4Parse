@@ -561,18 +561,18 @@ namespace CUE4Parse.UE4.Versions
 		    // Fix reachable garbage object warnings from some legacy ASpatialHashRuntimeGridInfo actors
 		    SpatialHashRuntimeGridInfoSpriteFixup,
 
-		    // Removed UAnimSequence::bUseRawDataOnly flag alongside compression refactor
-		    AnimSequenceRawDataOnlyFlagRemoval,
+            // Removed UAnimSequence::bUseRawDataOnly flag alongside compression refactor
+            AnimSequenceRawDataOnlyFlagRemoval,
 
-		    // HLOD relevancy of Level Instances was previously ignored, now taken into account. Reset to the default behavior.
-		    ResetLevelInstanceHLODRelevancy,
+            // HLOD relevancy of Level Instances was previously ignored, now taken into account. Reset to the default behavior.
+            ResetLevelInstanceHLODRelevancy,
 
-		    // Updated default scene capture post-processing settings to reflect the underlying implementation overrides
-		    SceneCaptureDefaultSettings,
+            // Updated default scene capture post-processing settings to reflect the underlying implementation overrides
+            SceneCaptureDefaultSettings,
 
-		    // -----<new versions can be added above this line>-------------------------------------------------
-		    VersionPlusOne,
-		    LatestVersion = VersionPlusOne - 1
+            // -----<new versions can be added above this line>-------------------------------------------------
+            VersionPlusOne,
+            LatestVersion = VersionPlusOne - 1
         }
 
         public static readonly FGuid GUID = new(0x601D1886, 0xAC644F84, 0xAA16D3DE, 0x0DEAC7D6);

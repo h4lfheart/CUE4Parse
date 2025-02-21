@@ -354,7 +354,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 }
             }
 
-            if (Ar.Game is >= EGame.GAME_UE4_23 or EGame.GAME_Fortnite_S10 or EGame.GAME_Fortnite_S9)
+            if (Ar.Game >= EGame.GAME_UE4_23)
             {
                 var skinWeightProfilesData = new FSkinWeightProfilesData(Ar);
             }
@@ -414,7 +414,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh
                 }
             }
 
-            if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.SkeletalHalfEdgeData && Ar.Game is not EGame.GAME_Fortnite_S27)
+            if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.SkeletalHalfEdgeData)
             {
                 const byte MeshDeformerStripFlag = 1;
                 var meshDeformerStripFlags = Ar.Read<FStripDataFlags>();

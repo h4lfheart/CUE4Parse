@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
@@ -56,7 +55,7 @@ public class FStaticMeshComponentLODInfo
             {
                 MapBuildDataId = Ar.Read<FGuid>();
             }
-            
+
             if (Ar.Game >= EGame.GAME_UE5_5)
             {
                 OriginalMapBuildDataId = Ar.Read<FGuid>();
