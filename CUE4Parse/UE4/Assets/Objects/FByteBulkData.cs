@@ -161,25 +161,7 @@ namespace CUE4Parse.UE4.Assets.Objects
             }
             return payloadAr != null;
         }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private bool TryGetBulkPayload(FAssetArchive Ar, PayloadType type, [MaybeNullWhen(false)] out FAssetArchive payloadAr)
-        {
-            payloadAr = null;
-            if (Header.CookedIndex.IsDefault)
-            {
-                Ar.TryGetPayload(type, out payloadAr);
-            }
-            else if (Ar.Owner?.Provider is IVfsFileProvider vfsFileProvider)
-            {
-                var path = Path.ChangeExtension(Ar.Name, $"{Header.CookedIndex}.{type.ToString().ToLowerInvariant()}");
-                if (vfsFileProvider.TryFindGameFile(path, out var file) && file.TryCreateReader(out var reader))
-                {
-                    payloadAr = new FAssetArchive(reader, Ar.Owner);
-                }
-            }
-            return payloadAr != null;
-        }
+        
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int GetDataSize() => Header.ElementCount;
