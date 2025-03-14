@@ -206,6 +206,11 @@ public class FScriptStruct
             _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
         };
     }
+    
+    public FScriptStruct(IUStruct structType)
+    {
+        StructType = structType;
+    }
 
     public override string ToString() => $"{StructType} ({StructType.GetType().Name})";
 }
