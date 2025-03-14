@@ -53,7 +53,6 @@ public readonly struct FMovieSceneChannel<T> : IUStruct
 
         SerializedElementSize = Ar.Read<int>();
         Values = Ar.ReadArray(() => new FMovieSceneValue<T>(Ar, Ar.Read<T>()));
-
         DefaultValue = Ar.Read<T>();
         bHasDefaultValue = Ar.ReadBoolean();
         TickResolution = Ar.Read<FFrameRate>();

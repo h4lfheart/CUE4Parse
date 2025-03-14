@@ -29,7 +29,6 @@ public class UMapBuildDataRegistry : UObject
 
         if (!stripFlags.IsAudioVisualDataStripped())
         {
-
             MeshBuildData = Ar.ReadMap(Ar.Read<FGuid>, () => new FMeshMapBuildData(Ar));
             LevelPrecomputedLightVolumeBuildData = Ar.ReadMap(Ar.Read<FGuid>, () => new FPrecomputedLightVolumeData(Ar));
 
@@ -133,6 +132,7 @@ public class FReflectionCaptureData
 
         //FullHDRCapturedData = Ar.ReadArray<byte>(); // Can also be stripped, but still a byte[]
         Ar.SkipFixedArray(1); // Skip for now
+        if (Ar.Game == EGame.GAME_FinalFantasy7Rebirth) Ar.Position += 4;
 
         if (FMobileObjectVersion.Get(Ar) >= FMobileObjectVersion.Type.StoreReflectionCaptureCompressedMobile &&
             FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.StoreReflectionCaptureEncodedHDRDataInRG11B10Format)
@@ -307,7 +307,6 @@ public class FMeshMapBuildData
             _ => null
         };
 
-            
         ShadowMap = Ar.Read<EShadowMapType>() switch
         {
             EShadowMapType.SMT_2D => new FShadowMap2D(Ar),

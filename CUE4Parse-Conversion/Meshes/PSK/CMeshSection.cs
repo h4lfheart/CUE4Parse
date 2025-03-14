@@ -27,7 +27,7 @@ namespace CUE4Parse_Conversion.Meshes.PSK
             FirstIndex = section.BaseIndex;
             NumFaces = section.NumTriangles;
         }
-
+        
         public CMeshSection(int index, FStaticMeshSection section, string? materialName, ResolvedObject? material) : this(section)
         {
             MaterialIndex = index;
