@@ -204,7 +204,7 @@ public class FStaticMeshLODResources
         {
             _ = new FColorVertexBuffer(Ar);
         }
-
+        
         IndexBuffer = new FRawStaticIndexBuffer(Ar);
 
         if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_ReversedIndexBuffer))

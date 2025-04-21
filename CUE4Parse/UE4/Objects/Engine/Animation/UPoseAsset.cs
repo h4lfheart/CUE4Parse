@@ -40,9 +40,8 @@ namespace CUE4Parse.UE4.Objects.Engine.Animation
         {
             LocalSpacePose = fallback.GetOrDefault<FTransform[]>(nameof(LocalSpacePose));
             CurveData = fallback.GetOrDefault<float[]>(nameof(CurveData));
-
-            var trackToBufferIndexMap = fallback.GetOrDefault<UScriptMap?>("TrackToBufferIndex");
-            if (trackToBufferIndexMap is not null)
+            
+            if (fallback.GetOrDefault<UScriptMap?>("TrackToBufferIndex") is { } trackToBufferIndexMap)
             {
                 foreach (var (key, value) in trackToBufferIndexMap.Properties)
                 {
@@ -87,18 +86,18 @@ namespace CUE4Parse.UE4.Objects.Engine.Animation
         public FSmartName[]? PoseNames_DEPRECATED;
         public FName[]? PoseFNames;
         public FName[] Tracks;
-        public FPoseAssetInfluences[] TrackPoseInfluenceIndices;
-        public FPoseData[] Poses;
+        public FPoseAssetInfluences?[] TrackPoseInfluenceIndices;
+        public FPoseData[]? Poses;
         public FAnimCurveBase[] Curves;
 
         public FPoseDataContainer(FStructFallback fallback)
         {
             PoseNames_DEPRECATED = fallback.GetOrDefault<FSmartName[]>("PoseNames"); // FUE5MainStreamObjectVersion.Type.AnimationRemoveSmartNames
             PoseFNames = fallback.GetOrDefault<FName[]>(nameof(PoseFNames));
-            Tracks = fallback.GetOrDefault<FName[]>(nameof(Tracks));
-            TrackPoseInfluenceIndices = fallback.GetOrDefault<FPoseAssetInfluences[]>(nameof(TrackPoseInfluenceIndices));
-            Poses = fallback.GetOrDefault<FPoseData[]>(nameof(Poses));
-            Curves = fallback.GetOrDefault<FAnimCurveBase[]>(nameof(Curves));
+            Tracks = fallback.GetOrDefault<FName[]>(nameof(Tracks), []);
+            TrackPoseInfluenceIndices = fallback.GetOrDefault<FPoseAssetInfluences[]>(nameof(TrackPoseInfluenceIndices), []);
+            Poses = fallback.GetOrDefault<FPoseData[]>(nameof(Poses), []);
+            Curves = fallback.GetOrDefault<FAnimCurveBase[]>(nameof(Curves), []);
         }
 
         public IEnumerable<string> GetPoseNames()
