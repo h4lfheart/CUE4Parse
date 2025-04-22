@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -381,7 +381,7 @@ public static class TextureEncoder
                 throw new NotImplementedException("Unsupported pixel format: " + texture.PixelFormat);
         }
 
-        var info = new SKImageInfo(texture.Width, texture.Height, skColorType, SKAlphaType.Premul);
+        var info = new SKImageInfo(texture.Width, texture.Height, skColorType, SKAlphaType.Unpremul);
         return InstallPixels(dataSpan, convertedData, info);
     }
 
