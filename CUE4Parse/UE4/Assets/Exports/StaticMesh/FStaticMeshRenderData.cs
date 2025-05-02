@@ -1,3 +1,4 @@
+using System;
 using CUE4Parse.UE4.Assets.Exports.Nanite;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -112,12 +113,20 @@ public class FStaticMeshRenderData
         Bounds = new FBoxSphereBounds(Ar);
 
         if (Ar.Versions["StaticMesh.HasLODsShareStaticLighting"])
-            bLODsShareStaticLighting = Ar.ReadBoolean();
+        {
+            if (Ar.Game >= EGame.GAME_UE5_6)
+            {
+                var bRenderDataFlags = Ar.Read<byte>();
+                bLODsShareStaticLighting = (bRenderDataFlags & 1) != 0;
+            }
+            else
+            {
+                bLODsShareStaticLighting = Ar.ReadBoolean();
+            }
+        }
 
         if (Ar.Game < EGame.GAME_UE4_14)
-        {
-            var bReducedBySimplygon = Ar.ReadBoolean();
-        }
+            _ = Ar.ReadBoolean();
 
         if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.TextureStreamingMeshUVChannelData)
         {

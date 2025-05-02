@@ -298,6 +298,12 @@ public class FMeshMapBuildData
     public FGuid[] IrrelevantLights;
     public FPerInstanceLightmapData[] PerInstanceLightmapData;
 
+    public FMeshMapBuildData()
+    {
+        IrrelevantLights = [];
+        PerInstanceLightmapData = [];
+    }
+
     public FMeshMapBuildData(FAssetArchive Ar)
     {
         LightMap = Ar.Read<ELightMapType>() switch
