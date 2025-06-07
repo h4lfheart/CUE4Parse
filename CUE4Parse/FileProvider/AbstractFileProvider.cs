@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -68,7 +69,7 @@ namespace CUE4Parse.FileProvider
 
             Files = new FileProviderDictionary();
             Internationalization = new InternationalizationDictionary(PathComparer);
-            VirtualPaths = new Dictionary<string, string>(PathComparer);
+            VirtualPaths = new ConcurrentDictionary<string, string>(PathComparer);
             DefaultGame = new CustomConfigIni(nameof(DefaultGame));
             DefaultEngine = new CustomConfigIni(nameof(DefaultEngine));
         }
@@ -343,41 +344,51 @@ namespace CUE4Parse.FileProvider
             };
         }
 
+        private static readonly string[] pluginExtensions = { ".uplugin", ".upluginmanifest", "AssetRegistry.bin" };
         public int LoadVirtualPaths() { return LoadVirtualPaths(Versions.Ver); }
         public int LoadVirtualPaths(FPackageFileVersion version, CancellationToken cancellationToken = default)
         {
             var regex = new Regex($"^{ProjectName}/Plugins/.+.upluginmanifest$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            var arregex = new Regex($"^{ProjectName}/Plugins/.*AssetRegistry.bin$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
             VirtualPaths.Clear();
 
-            var i = 0;
-            var useIndividualPlugin = version < EUnrealEngineObjectUE4Version.ADDED_SOFT_OBJECT_PATH || !Files.Any(file => file.Key.EndsWith(".upluginmanifest"));
-            foreach ((string filePath, GameFile gameFile) in Files)
+            var plugins = Files.Where(f => pluginExtensions.Any(suffix => f.Key.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)));
+            var useIndividualPlugin = version < EUnrealEngineObjectUE4Version.ADDED_SOFT_OBJECT_PATH || !plugins.Any(file => file.Key.EndsWith(".upluginmanifest"));
+
+            var virtualPaths = new ConcurrentDictionary<string, string>(PathComparer);
+            Parallel.ForEach(plugins, new ParallelOptions { CancellationToken = cancellationToken }, (kvp) =>
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                if (useIndividualPlugin) // < 4.18 or no .upluginmanifest
+
+                string filePath = kvp.Key;
+                GameFile gameFile = kvp.Value;
+
+                if (arregex.IsMatch(filePath))
                 {
-                    if (!filePath.EndsWith(".uplugin")) continue;
-                    if (!TryCreateReader(gameFile.Path, out var stream)) continue;
+                    var virtPath = gameFile.Directory.SubstringAfterLast('/');
+                    var path = gameFile.Directory;
+
+                    virtualPaths.TryAdd(virtPath, path);
+                    return;
+                }
+
+                if (useIndividualPlugin)
+                {
+                    if (!filePath.EndsWith(".uplugin")) return;
+                    if (!TryCreateReader(gameFile.Path, out var stream)) return;
                     using var reader = new StreamReader(stream);
                     var pluginFile = JsonConvert.DeserializeObject<UPluginDescriptor>(reader.ReadToEnd());
-                    if (!pluginFile!.CanContainContent) continue;
+                    if (!pluginFile!.CanContainContent) return;
+
                     var virtPath = gameFile.Path.SubstringAfterLast('/').SubstringBeforeLast('.');
                     var path = gameFile.Path.SubstringBeforeLast('/');
 
-                    if (!VirtualPaths.ContainsKey(virtPath))
-                    {
-                        VirtualPaths.Add(virtPath, path);
-                        i++; // Only increment if we don't have the path already
-                    }
-                    else
-                    {
-                        VirtualPaths[virtPath] = path;
-                    }
+                    virtualPaths.TryAdd(virtPath, path);
                 }
                 else
                 {
-                    if (!regex.IsMatch(filePath)) continue;
-                    if (!TryCreateReader(gameFile.Path, out var stream)) continue;
+                    if (!regex.IsMatch(filePath)) return;
+                    if (!TryCreateReader(gameFile.Path, out var stream)) return;
                     using var reader = new StreamReader(stream);
                     var manifest = JsonConvert.DeserializeObject<UPluginManifest>(reader.ReadToEnd());
 
@@ -386,23 +397,21 @@ namespace CUE4Parse.FileProvider
                         cancellationToken.ThrowIfCancellationRequested();
 
                         if (!content.Descriptor.CanContainContent) continue;
+
                         var virtPath = content.File.SubstringAfterLast('/').SubstringBeforeLast('.');
                         var path = content.File.Replace("../../../", string.Empty).SubstringBeforeLast('/');
 
-                        if (!VirtualPaths.ContainsKey(virtPath))
-                        {
-                            VirtualPaths.Add(virtPath, path);
-                            i++; // Only increment if we don't have the path already
-                        }
-                        else
-                        {
-                            VirtualPaths[virtPath] = path;
-                        }
+                        virtualPaths.TryAdd(virtPath, path);
                     }
                 }
+            });
+
+            foreach (var kvp in virtualPaths)
+            {
+                VirtualPaths[kvp.Key] = kvp.Value;
             }
 
-            return i;
+            return VirtualPaths.Count;
         }
 
         protected bool LoadIniConfigs()
@@ -559,7 +568,7 @@ namespace CUE4Parse.FileProvider
         #region LoadPackage Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IPackage LoadPackage(string path) => LoadPackage(this[path]);
-        public IPackage LoadPackage(GameFile file)
+        public virtual IPackage LoadPackage(GameFile file)
         {
             if (!file.IsUePackage) throw new ArgumentException("cannot load non-UE package", nameof(file));
             Files.FindPayloads(file, out var uexp, out var ubulks, out var uptnls);
@@ -581,7 +590,7 @@ namespace CUE4Parse.FileProvider
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<IPackage> LoadPackageAsync(string path) => LoadPackageAsync(this[path]);
-        public async Task<IPackage> LoadPackageAsync(GameFile file)
+        public virtual async Task<IPackage> LoadPackageAsync(GameFile file)
         {
             if (!file.IsUePackage) throw new ArgumentException("cannot load non-UE package", nameof(file));
             Files.FindPayloads(file, out var uexp, out var ubulks, out var uptnls);
@@ -780,7 +789,7 @@ namespace CUE4Parse.FileProvider
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<T?> SafeLoadPackageObjectAsync<T>(string path, string objectName) where T : UObject => await SafeLoadPackageObjectAsync<T>((path, objectName)).ConfigureAwait(false);
 
-        private async Task<T?> SafeLoadPackageObjectAsync<T>(ValueTuple<string, string> pathName) where T : UObject
+        protected async Task<T?> SafeLoadPackageObjectAsync<T>(ValueTuple<string, string> pathName) where T : UObject
         {
             try
             {
