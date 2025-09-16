@@ -10,6 +10,7 @@ namespace CUE4Parse_Conversion.Meshes.PSK
         public int ParentIndex;
         public FVector Position;
         public FQuat Orientation;
+        public FVector Scale;
 
         public object Clone()
         {

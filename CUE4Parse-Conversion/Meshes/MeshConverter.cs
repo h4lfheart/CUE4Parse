@@ -38,6 +38,7 @@ public static class MeshConverter
                 ParentIndex = originalSkeleton.ReferenceSkeleton.FinalRefBoneInfo[i].ParentIndex,
                 Position = originalSkeleton.ReferenceSkeleton.FinalRefBonePose[i].Translation,
                 Orientation = originalSkeleton.ReferenceSkeleton.FinalRefBonePose[i].Rotation,
+                Scale = originalSkeleton.ReferenceSkeleton.FinalRefBonePose[i].Scale3D
             };
 
             // if (i >= 1) // fix skeleton; all bones but 0
@@ -324,7 +325,8 @@ public static class MeshConverter
                 Name = originalMesh.ReferenceSkeleton.FinalRefBoneInfo[i].Name,
                 ParentIndex = originalMesh.ReferenceSkeleton.FinalRefBoneInfo[i].ParentIndex,
                 Position = originalMesh.ReferenceSkeleton.FinalRefBonePose[i].Translation,
-                Orientation = originalMesh.ReferenceSkeleton.FinalRefBonePose[i].Rotation
+                Orientation = originalMesh.ReferenceSkeleton.FinalRefBonePose[i].Rotation,
+                Scale = originalMesh.ReferenceSkeleton.FinalRefBonePose[i].Scale3D
             };
 
             // if (i >= 1) // fix skeleton; all bones but 0
