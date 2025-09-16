@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -15,16 +14,20 @@ using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Texture;
 
+public class UBinkMediaTexture : UTexture;
+
 public abstract class UTexture : UUnrealMaterial, IAssetUserData
 {
     public FGuid LightingGuid { get; private set; }
     public TextureCompressionSettings CompressionSettings { get; private set; }
+    public TextureGroup LODGroup { get; private set; }
+    public TextureFilter Filter { get; private set; }
     public bool SRGB { get; private set; }
     public FPackageIndex[] AssetUserData { get; private set; } = [];
-    public bool RenderNearestNeighbor { get; private set; }
     public EPixelFormat Format { get; protected set; } = EPixelFormat.PF_Unknown;
     public FTexturePlatformData PlatformData { get; private set; } = new();
 
+    public bool RenderNearestNeighbor => LODGroup == TextureGroup.TEXTUREGROUP_Pixels2D || Filter == TextureFilter.TF_Nearest;
     public bool IsNormalMap => CompressionSettings == TextureCompressionSettings.TC_Normalmap;
     public bool IsHDR => CompressionSettings is
         TextureCompressionSettings.TC_HDR or
@@ -59,17 +62,14 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
+        if(Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 16;
         base.Deserialize(Ar, validPos);
         LightingGuid = GetOrDefault(nameof(LightingGuid), new FGuid((uint) GetFullName().GetHashCode()));
         CompressionSettings = GetOrDefault(nameof(CompressionSettings), TextureCompressionSettings.TC_Default);
+        LODGroup = GetOrDefault(nameof(LODGroup), TextureGroup.TEXTUREGROUP_World);
+        Filter = GetOrDefault(nameof(Filter), TextureFilter.TF_Nearest);
         SRGB = GetOrDefault(nameof(SRGB), true);
         AssetUserData = GetOrDefault<FPackageIndex[]>(nameof(AssetUserData), []);
-
-        if (TryGetValue(out FName trigger, "LODGroup", "Filter") && !trigger.IsNone)
-        {
-            RenderNearestNeighbor = trigger.Text.EndsWith("TEXTUREGROUP_Pixels2D", StringComparison.OrdinalIgnoreCase) ||
-                                    trigger.Text.EndsWith("TF_Nearest", StringComparison.OrdinalIgnoreCase);
-        }
 
         var stripFlags = Ar.Read<FStripDataFlags>();
 
@@ -80,7 +80,6 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
             // {
             //
             // }
-
             // throw new NotImplementedException("Non-Cooked Textures are not supported");
         }
     }
@@ -88,6 +87,7 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
     protected void DeserializeCookedPlatformData(FAssetArchive Ar, bool bSerializeMipData = true)
     {
         var pixelFormatName = Ar.ReadFName();
+        if (pixelFormatName.Text == "PF_BC6H_Signed") pixelFormatName = "PF_BC6H";
         while (!pixelFormatName.IsNone)
         {
             Enum.TryParse(pixelFormatName.Text, out EPixelFormat pixelFormat);
@@ -168,11 +168,11 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public FTexture2DMipMap? GetMip(int index) => 
+    public FTexture2DMipMap? GetMip(int index) =>
         index >= 0 && index < PlatformData.Mips.Length && PlatformData.Mips[index].EnsureValidBulkData(MipDataProvider, index)
             ? PlatformData.Mips[index]
             : null;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public FTexture2DMipMap? GetFirstMip() => PlatformData.Mips.Where((t, i) => t.EnsureValidBulkData(MipDataProvider, i)).FirstOrDefault();
 

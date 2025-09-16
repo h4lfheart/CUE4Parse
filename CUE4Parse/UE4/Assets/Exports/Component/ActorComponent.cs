@@ -21,6 +21,8 @@ public class UActorComponent : UObject
         if (Ar.Position == validPos) // I think after validpos all read default to dummy data 000000s
             return;
 
+        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 16;
+
         if (FFortniteReleaseBranchCustomObjectVersion.Get(Ar) >= FFortniteReleaseBranchCustomObjectVersion.Type.ActorComponentUCSModifiedPropertiesSparseStorage)
         {
             UCSModifiedProperties = Ar.ReadArray(() => new FSimpleMemberReference(Ar));
@@ -170,7 +172,6 @@ public class UMeshComponent : UPrimitiveComponent;
 public class UMeshWireframeComponent : UMeshComponent;
 public class UMockDataMeshTrackerComponent : USceneComponent;
 public class UMockGameplayTasksComponent : UGameplayTasksComponent;
-public class UModelComponent : UPrimitiveComponent;
 public class UModularSynthComponent : USynthComponent;
 public class UMotionControllerComponent : UPrimitiveComponent;
 public class UMovementComp_Character : UCharacterMovementComponent;
@@ -208,7 +209,25 @@ public class UPaperTerrainComponent : UPrimitiveComponent;
 public class UPaperTerrainSplineComponent : USplineComponent;
 public class UPaperTileMapComponent : UMeshComponent;
 public class UPaperTileMapRenderComponent : UPaperTileMapComponent;
-public class UParticleSystemComponent : UFXSystemComponent;
+
+public class UParticleSystemComponent : UFXSystemComponent
+{
+    public override void Deserialize(FAssetArchive Ar, long validPos)
+    {
+        if(Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 16;
+        base.Deserialize(Ar, validPos);
+    }
+}
+
+public class UParticleSystem : UObject
+{
+    public override void Deserialize(FAssetArchive Ar, long validPos)
+    {
+        if(Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 8;
+        base.Deserialize(Ar, validPos);
+    }
+}
+
 public class UPathFollowingComponent : UActorComponent;
 public class UPawnActionsComponent : UActorComponent;
 public class UPawnMovementComponent : UNavMovementComponent;

@@ -13,22 +13,31 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh;
 [JsonConverter(typeof(FStaticMeshRenderDataConverter))]
 public class FStaticMeshRenderData
 {
-    private const int MAX_STATIC_UV_SETS_UE4 = 8;
-    private const int MAX_STATIC_LODS_UE4 = 8;
+    protected const int MAX_STATIC_UV_SETS_UE4 = 8;
+    protected const int MAX_STATIC_LODS_UE4 = 8;
 
-    public readonly FStaticMeshLODResources[]? LODs;
-    public readonly FNaniteResources? NaniteResources;
-    public readonly FBoxSphereBounds? Bounds;
-    public readonly bool bLODsShareStaticLighting;
-    public readonly float[]? ScreenSize;
+    public FStaticMeshLODResources[]? LODs;
+    public FNaniteResources? NaniteResources;
+    public FBoxSphereBounds? Bounds;
+    public bool bLODsShareStaticLighting;
+    public float[] ScreenSize = [];
+
+    public FStaticMeshRenderData() { }
 
     public FStaticMeshRenderData(FAssetArchive Ar)
     {
         if (Ar.Versions["StaticMesh.KeepMobileMinLODSettingOnDesktop"])
             _ = Ar.Read<int>(); // minMobileLODIdx
 
-        if (Ar.Game == EGame.GAME_HYENAS) Ar.Position += 1;
-        if (Ar.Game == EGame.GAME_DaysGone) Ar.SkipFixedArray(4);
+        if (Ar.Game == EGame.GAME_TonyHawkProSkater34 && !Ar.ReadBoolean()) return;
+
+        Ar.Position += Ar.Game switch
+        {
+            EGame.GAME_HYENAS => 1,
+            EGame.GAME_DuneAwakening or EGame.GAME_Squad => 4,
+            EGame.GAME_DaysGone => Ar.Read<int>() * 4 + 4,
+            _ => 0
+        };
 
         if (Ar.Game == EGame.GAME_Undawn)
         {
@@ -57,7 +66,7 @@ public class FStaticMeshRenderData
 
         // In Fortnite S8, engine is 4.22, but has static mesh from 4.23.
         // Comment this check out to fix.
-        if (Ar.Game is >= EGame.GAME_UE4_23 or EGame.GAME_Fortnite_S10 or EGame.GAME_Fortnite_S9)
+        if (Ar.Game >= EGame.GAME_UE4_23)
         {
             var numInlinedLODs = Ar.Read<byte>();
         }
@@ -98,7 +107,7 @@ public class FStaticMeshRenderData
                     var bValid = Ar.ReadBoolean();
                     if (bValid)
                     {
-                        if (Ar.Game >= EGame.GAME_UE5_0)
+                        if (Ar.Game is >= EGame.GAME_UE5_0 or EGame.GAME_TerminullBrigade)
                         {
                             _ = new FDistanceFieldVolumeData5(Ar);
                         }
@@ -107,6 +116,22 @@ public class FStaticMeshRenderData
                             _ = new FDistanceFieldVolumeData(Ar);
                         }
                     }
+                }
+            }
+        }
+
+        if (Ar.Game == EGame.GAME_ArenaBreakoutInifinite)
+        {
+            var flags = new FStripDataFlags(Ar);
+            if (Ar.ReadBoolean())
+            {
+                _ = new FBox(Ar);
+                Ar.Position += 4+3*56;
+                Ar.SkipFixedArray(1); // SDF array??
+                for (var i = 0; i < LODs.Length; i++)
+                {
+                    var idk2 = Ar.Read<int>(); // some flags
+                    if (idk2 != 0) _ = new FByteBulkData(Ar);
                 }
             }
         }
@@ -192,7 +217,7 @@ public class FStaticMeshRenderData
             }
         }
 
-        if (Ar.Game is >= EGame.GAME_UE5_4 and not EGame.GAME_Fortnite_S27) _ = Ar.Read<FStripDataFlags>();
+        if (Ar.Game >= EGame.GAME_UE5_4) _ = Ar.Read<FStripDataFlags>();
     }
 
     private void SerializeInlineDataRepresentations(FAssetArchive Ar)

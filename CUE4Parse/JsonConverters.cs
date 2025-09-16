@@ -38,6 +38,7 @@ using CUE4Parse.UE4.Oodle.Objects;
 using CUE4Parse.UE4.Shaders;
 using CUE4Parse.UE4.Wwise;
 using CUE4Parse.UE4.Wwise.Objects;
+using CUE4Parse.UE4.Wwise.Objects.HIRC;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
 #pragma warning disable CS8765
@@ -776,6 +777,19 @@ public class StrPropertyConverter : JsonConverter<StrProperty>
         throw new NotImplementedException();
     }
 }
+public class Utf8StrPropertyConverter : JsonConverter<Utf8StrProperty>
+{
+    public override void WriteJson(JsonWriter writer, Utf8StrProperty value, JsonSerializer serializer)
+    {
+        writer.WriteValue(value.Value);
+    }
+
+    public override Utf8StrProperty ReadJson(JsonReader reader, Type objectType, Utf8StrProperty existingValue, bool hasExistingValue,
+        JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}
 
 public class VerseStringPropertyConverter : JsonConverter<VerseStringProperty>
 {
@@ -1385,6 +1399,9 @@ public class WwiseConverter : JsonConverter<WwiseReader>
         writer.WritePropertyName("Hierarchies");
         serializer.Serialize(writer, value.Hierarchies);
 
+        writer.WritePropertyName("EnvSettings");
+        serializer.Serialize(writer, value.EnvSettings);
+
         writer.WritePropertyName("IdToString");
         serializer.Serialize(writer, value.IdToString);
 
@@ -1400,6 +1417,7 @@ public class WwiseConverter : JsonConverter<WwiseReader>
         throw new NotImplementedException();
     }
 }
+
 public class FReferenceSkeletonConverter : JsonConverter<FReferenceSkeleton>
 {
     public override void WriteJson(JsonWriter writer, FReferenceSkeleton value, JsonSerializer serializer)
@@ -2155,6 +2173,12 @@ public class FStaticMeshSectionConverter : JsonConverter<FStaticMeshSection>
 
         writer.WritePropertyName("bVisibleInRayTracing");
         writer.WriteValue(value.bVisibleInRayTracing);
+
+        if (value.CustomData.HasValue)
+        {
+            writer.WritePropertyName("CustomData");
+            writer.WriteValue(value.CustomData.Value);
+        }
 
         writer.WriteEndObject();
     }
@@ -3128,5 +3152,82 @@ public class FWwiseLocalizedEventCookedDataConverter : JsonConverter<FWwiseLocal
         JsonSerializer serializer)
     {
         throw new NotImplementedException();
+    }
+}
+
+public class FWwiseLocalizedSoundBankCookedDataConverter : JsonConverter<FWwiseLocalizedSoundBankCookedData>
+{
+    public override void WriteJson(JsonWriter writer, FWwiseLocalizedSoundBankCookedData value, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+
+        writer.WritePropertyName("SoundBankLanguageMap");
+        writer.WriteStartArray();
+        foreach (var (language, data) in value.SoundBankLanguageMap)
+        {
+            writer.WriteStartObject();
+
+            writer.WritePropertyName("Key");
+            serializer.Serialize(writer, language);
+
+            writer.WritePropertyName("Value");
+            serializer.Serialize(writer, data);
+
+            writer.WriteEndObject();
+        }
+        writer.WriteEndArray();
+
+        writer.WritePropertyName("DebugName");
+        serializer.Serialize(writer, value.DebugName);
+
+        writer.WritePropertyName("SoundBankId");
+        writer.WriteValue(value.SoundBankId);
+
+        writer.WritePropertyName("IncludedEventNames");
+        serializer.Serialize(writer, value.IncludedEventNames);
+
+        writer.WriteEndObject();
+    }
+
+    public override FWwiseLocalizedSoundBankCookedData? ReadJson(JsonReader reader, Type objectType, FWwiseLocalizedSoundBankCookedData? existingValue, bool hasExistingValue, JsonSerializer serializer)
+        => throw new NotImplementedException("Deserialization not implemented");
+}
+
+public class BankHeaderConverter : JsonConverter<BankHeader>
+{
+    public override void WriteJson(JsonWriter writer, BankHeader value, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+
+        writer.WritePropertyName("Version");
+        writer.WriteValue(value.Version);
+
+        writer.WritePropertyName("SoundBankId");
+        writer.WriteValue(value.SoundBankId);
+
+        writer.WritePropertyName("LanguageId");
+        writer.WriteValue(value.LanguageId);
+
+        writer.WritePropertyName("FeedbackInBank");
+        writer.WriteValue(value.FeedbackInBank);
+
+        writer.WritePropertyName("AltValues");
+        writer.WriteValue(value.AltValues.ToString());
+
+        writer.WritePropertyName("ProjectId");
+        writer.WriteValue(value.ProjectId);
+
+        writer.WritePropertyName("SoundBankType");
+        writer.WriteValue(value.SoundBankType);
+
+        writer.WritePropertyName("BankHash");
+        writer.WriteValue(value.BankHash);
+
+        writer.WriteEndObject();
+    }
+
+    public override BankHeader ReadJson(JsonReader reader, Type objectType, BankHeader existingValue, bool hasExistingValue, JsonSerializer serializer)
+    {
+        throw new NotImplementedException("Deserialization is not implemented.");
     }
 }

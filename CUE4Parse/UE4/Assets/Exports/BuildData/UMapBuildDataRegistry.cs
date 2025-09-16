@@ -26,6 +26,7 @@ public class UMapBuildDataRegistry : UObject
         base.Deserialize(Ar, validPos);
 
         var stripFlags = new FStripDataFlags(Ar);
+        if (Ar.Game is EGame.GAME_Farlight84) return;
 
         if (!stripFlags.IsAudioVisualDataStripped())
         {
@@ -46,7 +47,7 @@ public class UMapBuildDataRegistry : UObject
             if (Ar.Game == EGame.GAME_HogwartsLegacy)
             {
                 Ar.SkipFixedArray(1);
-                return;
+                Ar.Position -= 4;
             }
 
             if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.SkyAtmosphereStaticLightingVersioning)
@@ -141,7 +142,15 @@ public class FReflectionCaptureData
 
         //FullHDRCapturedData = Ar.ReadArray<byte>(); // Can also be stripped, but still a byte[]
         Ar.SkipFixedArray(1); // Skip for now
-        if (Ar.Game == EGame.GAME_FinalFantasy7Rebirth) Ar.Position += 4;
+        if (Ar.Game is EGame.GAME_FinalFantasy7Rebirth or EGame.GAME_ArenaBreakoutInifinite) Ar.Position += 4;
+        if (Ar.Game == EGame.GAME_HogwartsLegacy)
+        {
+            var count = Ar.Read<int>();
+            for (var i = 0; i < count; i++) Ar.SkipFixedArray(1);
+            count = Ar.Read<int>();
+            for (var i = 0; i < count; i++) Ar.SkipFixedArray(1);
+
+        }
 
         if (FMobileObjectVersion.Get(Ar) >= FMobileObjectVersion.Type.StoreReflectionCaptureCompressedMobile &&
             FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.StoreReflectionCaptureEncodedHDRDataInRG11B10Format)
@@ -154,6 +163,7 @@ public class FReflectionCaptureData
         }
 
         if (Ar.Game == EGame.GAME_TheFirstDescendant) Ar.Position += 16;
+        if (Ar.Game == EGame.GAME_Valorant) Ar.SkipFixedArray(1);
         if (Ar.Game == EGame.GAME_BlackMythWukong)
         {
             Ar.SkipFixedArray(1);
@@ -162,10 +172,17 @@ public class FReflectionCaptureData
     }
 }
 
-public class FLightComponentMapBuildData(FArchive Ar)
+public class FLightComponentMapBuildData
 {
-    public int ShadowMapChannel = Ar.Read<int>();
-    public FStaticShadowDepthMapData DepthMap = new FStaticShadowDepthMapData(Ar);
+    public int ShadowMapChannel;
+    public FStaticShadowDepthMapData DepthMap;
+
+    public FLightComponentMapBuildData(FArchive Ar)
+    {
+        ShadowMapChannel = Ar.Read<int>();
+        DepthMap = new FStaticShadowDepthMapData(Ar);
+        if (Ar.Game == EGame.GAME_TonyHawkProSkater34) Ar.Position += 76; // Identity Matrix + Zero Vector
+    }
 }
 
 public class FStaticShadowDepthMapData(FArchive Ar)
@@ -321,6 +338,8 @@ public class FMeshMapBuildData
             ELightMapType.LMT_2D => new FLightMap2D(Ar),
             _ => null
         };
+
+        if (Ar.Game == EGame.GAME_ArenaBreakoutInifinite) Ar.Position += Ar.Read<int>() == 2 ? 156 : 4; // FTransferLightMap
 
         ShadowMap = Ar.Read<EShadowMapType>() switch
         {
@@ -479,6 +498,7 @@ public class FShadowMap2D : FShadowMap
             const float LegacyValue = 1.0f / .05f;
             InvUniformPenumbraSize = new FVector4(LegacyValue);
         }
+        if (Ar.Game == EGame.GAME_Snowbreak) Ar.Position += 20;
     }
 }
 

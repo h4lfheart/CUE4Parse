@@ -74,8 +74,7 @@ public class FStaticMeshLODResources
 
         if (!stripDataFlags.IsAudioVisualDataStripped() && !bIsLODCookedOut)
         {
-            if (Ar.Game >= EGame.GAME_UE5_5)
-                _ = Ar.ReadBoolean(); // bHasRayTracingGeometry
+            if (Ar.Game >= EGame.GAME_UE5_5 || Ar.Game == EGame.GAME_MetalGearSolidDelta) Ar.Position += 4; // bHasRayTracingGeometry
 
             if (bInlined)
             {
@@ -88,7 +87,7 @@ public class FStaticMeshLODResources
                     case EGame.GAME_TheDivisionResurgence:
                         Ar.Position += 12;
                         break;
-                    case EGame.GAME_InfinityNikki when Sections.Any(x => x.CustomData == 1):
+                    case EGame.GAME_InfinityNikki when Sections.Any(x => x.CustomData.HasValue && x.CustomData.Value == 1):
                         _ = Ar.ReadArray(4, () => new FRawStaticIndexBuffer(Ar));
                         break;
                 }
@@ -120,10 +119,14 @@ public class FStaticMeshLODResources
                     Ar.Position += 2 * 4; // AdjacencyIndexBuffer
                 }
 
-                if (Ar.Game >= EGame.GAME_UE5_6)
-                    Ar.Position += 6 * 4; // RawDataHeader = 6x uint32
-
-                if (Ar.Game is EGame.GAME_StarWarsJediSurvivor or EGame.GAME_DeltaForceHawkOps) Ar.Position += 4; // bDropNormals
+                Ar.Position += Ar.Game switch
+                {
+                    >= EGame.GAME_UE5_6 => 6 * 4, // RawDataHeader = 6x uint32
+                    EGame.GAME_ArenaBreakoutInifinite => 16,
+                    EGame.GAME_StarWarsJediSurvivor or EGame.GAME_DeltaForceHawkOps => 4, // bDropNormals
+                    EGame.GAME_FateTrigger => 5,
+                    _ => 0
+                };
             }
 
             // FStaticMeshBuffersSize
@@ -164,6 +167,14 @@ public class FStaticMeshLODResources
         }
 
         IndexBuffer = new FRawStaticIndexBuffer(Ar);
+
+        if (Ar.Game == EGame.GAME_NarutotoBorutoShinobiStriker )
+        {
+            if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
+                AdjacencyIndexBuffer = new FRawStaticIndexBuffer(Ar);
+            Ar.ReadArray(Sections.Length + 1, () => new FWeightedRandomSampler(Ar));
+            return;
+        }
 
         if (Ar.Game != EGame.GAME_PlayerUnknownsBattlegrounds || !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_StripIndexBuffers))
         {
@@ -212,7 +223,7 @@ public class FStaticMeshLODResources
         VertexBuffer = new FStaticMeshVertexBuffer(Ar);
         ColorVertexBuffer = new FColorVertexBuffer(Ar);
 
-        if (Ar.Game == EGame.GAME_RogueCompany)
+        if (Ar.Game is EGame.GAME_RogueCompany)
         {
             _ = new FColorVertexBuffer(Ar);
         }
@@ -237,6 +248,12 @@ public class FStaticMeshLODResources
         {
             if (Ar.Game != EGame.GAME_GTATheTrilogyDefinitiveEdition && Ar.Game != EGame.GAME_FinalFantasy7Rebirth)
                 AdjacencyIndexBuffer = new FRawStaticIndexBuffer(Ar);
+        }
+
+        if (Ar.Game == EGame.GAME_ArenaBreakoutInifinite)
+        {
+            _ = new FRawStaticIndexBuffer(Ar);
+            _ = new FRawStaticIndexBuffer(Ar);
         }
 
         if (Ar.Game == EGame.GAME_FinalFantasy7Rebirth)

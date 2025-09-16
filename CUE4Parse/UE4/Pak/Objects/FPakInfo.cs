@@ -44,6 +44,7 @@ public partial class FPakInfo
     public const uint PAK_FILE_MAGIC_RacingMaster = 0x9a51da3f;
     public const uint PAK_FILE_MAGIC_CrystalOfAtlan = 0x22ce976a;
     public const uint PAK_FILE_MAGIC_PromiseMascotAgency = 0x11adde11;
+    public const uint PAK_FILE_MAGIC_ArenaBreakoutInfinite = 0x53647586;
 
     public const int COMPRESSION_METHOD_NAME_LEN = 32;
 
@@ -63,6 +64,8 @@ public partial class FPakInfo
 
     private FPakInfo(FArchive Ar, OffsetsToTry offsetToTry)
     {
+        var startPosition = Ar.Position;
+
         var hottaVersion = 0u;
         if (Ar.Game == EGame.GAME_TowerOfFantasy && offsetToTry == OffsetsToTry.SizeHotta)
         {
@@ -75,7 +78,7 @@ public partial class FPakInfo
             }
         }
 
-        if (Ar.Game == EGame.GAME_TorchlightInfinite) Ar.Position += 3;
+        if (Ar.Game is EGame.GAME_TorchlightInfinite or EGame.GAME_EtheriaRestart) Ar.Position += 3;
 
         if (Ar.Game == EGame.GAME_GameForPeace)
         {
@@ -97,6 +100,32 @@ public partial class FPakInfo
                 CompressionMethod.LZ4, CompressionMethod.Zstd
             ];
             return;
+        }
+
+        if (Ar.Game == EGame.GAME_ArenaBreakoutInifinite)
+        {
+            EncryptionKeyGuid = Ar.Read<FGuid>();
+            Magic = Ar.Read<uint>();
+            if (Magic != PAK_FILE_MAGIC_ArenaBreakoutInfinite) return;
+            EncryptedIndex = Ar.Read<byte>() != 0;
+            IndexSize = Ar.Read<long>();
+            IndexOffset = Ar.Read<long>();
+            IndexHash = new FSHAHash(Ar);
+            Version = Ar.Read<EPakFileVersion>();
+            goto beforeCompression;
+        }
+
+        if (Ar.Game == EGame.GAME_DragonQuestXI)
+        {
+            EncryptionKeyGuid = default;
+            EncryptedIndex = Ar.Read<byte>() != 0;
+            Magic = Ar.Read<uint>();
+            if (Magic != PAK_FILE_MAGIC) return;
+            Version = Ar.Read<EPakFileVersion>();
+            IndexOffset = Ar.Read<long>();
+            IndexSize = Ar.Read<long>();
+            IndexHash = new FSHAHash(Ar);
+            goto beforeCompression;
         }
 
         if (Ar.Game == EGame.GAME_RacingMaster)
@@ -167,7 +196,7 @@ public partial class FPakInfo
         if (Magic != PAK_FILE_MAGIC)
         {
             if (Ar.Game == EGame.GAME_OutlastTrials && Magic == PAK_FILE_MAGIC_OutlastTrials ||
-                Ar.Game == EGame.GAME_TorchlightInfinite && Magic == PAK_FILE_MAGIC_TorchlightInfinite ||
+                Ar.Game is EGame.GAME_TorchlightInfinite or EGame.GAME_EtheriaRestart && Magic == PAK_FILE_MAGIC_TorchlightInfinite ||
                 Ar.Game == EGame.GAME_WildAssault && Magic == PAK_FILE_MAGIC_WildAssault ||
                 Ar.Game == EGame.GAME_Undawn && Magic == PAK_FILE_MAGIC_Gameloop_Undawn ||
                 Ar.Game == EGame.GAME_FridayThe13th && Magic == PAK_FILE_MAGIC_FridayThe13th ||
@@ -207,12 +236,13 @@ public partial class FPakInfo
         }
 
         IsSubVersion = Version == EPakFileVersion.PakFile_Version_FNameBasedCompressionMethod && offsetToTry == OffsetsToTry.Size8a;
-        if (Ar.Game == EGame.GAME_TorchlightInfinite) Ar.Position += 1;
+        if (Ar.Game is EGame.GAME_TorchlightInfinite or EGame.GAME_EtheriaRestart) Ar.Position += 1;
         if (Ar.Game == EGame.GAME_BlackMythWukong) Ar.Position += 2;
         IndexOffset = Ar.Read<long>();
         if (Ar.Game == EGame.GAME_Farlight84) Ar.Position += 8; // unknown long
         if (Ar.Game == EGame.GAME_Snowbreak) IndexOffset ^= 0x1C1D1E1F;
         if (Ar.Game == EGame.GAME_KartRiderDrift) IndexOffset ^= 0x3009EB;
+        if (Ar.Game == EGame.GAME_NevernessToEverness) IndexOffset -= 1;
         IndexSize = Ar.Read<long>();
         IndexHash = new FSHAHash(Ar);
 
@@ -233,10 +263,22 @@ public partial class FPakInfo
             IndexSize = (long) ((ulong) IndexSize ^ 0x6DB425B4BC084B4B) - 0xA8;
         }
 
-        if (Ar.Game == EGame.GAME_DeadByDaylight)
+        if (Ar.Game is EGame.GAME_DeadByDaylight or EGame.GAME_DeadByDaylight_Old)
         {
             CustomEncryptionData = Ar.ReadBytes(28);
             _ = Ar.Read<uint>();
+        }
+
+        if (Ar.Game == EGame.GAME_OnePieceAmbition)
+        {
+            var currentPosition = Ar.Position;
+            Ar.Position = IndexOffset;
+            var shift = Ar.Read<long>();
+            IndexOffset = Ar.Read<long>();
+            shift = ~shift;
+            IndexOffset ^= shift;
+            IndexSize = startPosition - IndexOffset - 17;
+            Ar.Position = currentPosition;
         }
 
         if (Version == EPakFileVersion.PakFile_Version_FrozenIndex)
@@ -319,13 +361,13 @@ public partial class FPakInfo
         Size8 = Size8_3 + 32, // added size of CompressionMethods as char[32]
         Size8a = Size8 + 32, // UE4.23 - also has version 8 (like 4.22) but different pak file structure
         Size9 = Size8a + 1, // UE4.25
-        SizeB1 = Size9 + 1, // UE4.25
+        SizeB1 = Size9 + 1, // plus 1
         //Size10 = Size8a
 
-        SiseRacingMaster = Size8 + 4, // additional int
+        SizeRacingMaster = Size8 + 4, // additional int
         SizeFTT = Size + 4, // additional int for extra magic
         SizeHotta = Size8a + 4, // additional int for custom pak version
-        Size_ARKSurvivalAscended = Size8a + 8, // additional 8 bytes
+        SizeARKSurvivalAscended = Size8a + 8, // additional 8 bytes
         SizeFarlight = Size8a + 9, // additional long and byte
         SizeDreamStar = Size8a + 10,
         SizeRennsport = Size8a + 16,
@@ -359,46 +401,56 @@ public partial class FPakInfo
             {
                 EGame.GAME_DuneAwakening => (long) OffsetsToTry.SizeDuneAwakening,
                 EGame.GAME_KartRiderDrift => (long) OffsetsToTry.SizeKartRiderDrift,
-                _ => (long) OffsetsToTry.SizeMax,
+                _ => Math.Min(length, (long) OffsetsToTry.SizeMax),
             };
 
-            if (length < maxOffset)
-            {
-                throw new ParserException($"File {Ar.Name} is too small to be a pak file");
-            }
             Ar.Seek(-maxOffset, SeekOrigin.End);
             var buffer = stackalloc byte[(int) maxOffset];
             Ar.Serialize(buffer, (int) maxOffset);
-            
-            var reader = new FPointerArchive(Ar.Name, buffer, maxOffset, Ar.Versions);
+
+            using var reader = new FPointerArchive(Ar.Name, buffer, maxOffset, Ar.Versions);
 
             var offsetsToTry = Ar.Game switch
             {
-                EGame.GAME_TowerOfFantasy or EGame.GAME_MeetYourMaker or EGame.GAME_TorchlightInfinite => [OffsetsToTry.SizeHotta],
+                EGame.GAME_TowerOfFantasy or EGame.GAME_MeetYourMaker or EGame.GAME_TorchlightInfinite or EGame.GAME_EtheriaRestart => [OffsetsToTry.SizeHotta],
                 EGame.GAME_FridayThe13th => [OffsetsToTry.SizeFTT],
-                EGame.GAME_DeadByDaylight => [OffsetsToTry.SizeDbD],
+                EGame.GAME_DeadByDaylight or EGame.GAME_DeadByDaylight_Old => [OffsetsToTry.SizeDbD],
                 EGame.GAME_Farlight84 => [OffsetsToTry.SizeFarlight],
                 EGame.GAME_QQ or EGame.GAME_DreamStar => [OffsetsToTry.SizeDreamStar, OffsetsToTry.SizeQQ],
-                EGame.GAME_GameForPeace => [OffsetsToTry.SizeGameForPeace],
+                EGame.GAME_GameForPeace or EGame.GAME_DragonQuestXI => [OffsetsToTry.SizeGameForPeace],
                 EGame.GAME_BlackMythWukong => [OffsetsToTry.SizeB1],
                 EGame.GAME_Rennsport => [OffsetsToTry.SizeRennsport],
-                EGame.GAME_RacingMaster => [OffsetsToTry.SiseRacingMaster],
-                EGame.GAME_ARKSurvivalAscended or EGame.GAME_PromiseMascotAgency => [OffsetsToTry.Size_ARKSurvivalAscended],
+                EGame.GAME_RacingMaster => [OffsetsToTry.SizeRacingMaster],
+                EGame.GAME_ARKSurvivalAscended or EGame.GAME_PromiseMascotAgency => [OffsetsToTry.SizeARKSurvivalAscended],
                 EGame.GAME_KartRiderDrift => [.._offsetsToTry, OffsetsToTry.SizeKartRiderDrift],
                 EGame.GAME_DuneAwakening => [OffsetsToTry.SizeDuneAwakening],
                 _ => _offsetsToTry
             };
+
             foreach (var offset in offsetsToTry)
             {
+                if ((long)offset > maxOffset) continue;
+
                 reader.Seek(-(long) offset, SeekOrigin.End);
-                var info = new FPakInfo(reader, offset);
+                FPakInfo info;
+                if (Ar.Game == EGame.GAME_OnePieceAmbition)
+                {
+                    var currentOffset = Ar.Position;
+                    Ar.Position -= (long)offset;
+                    info = new FPakInfo(Ar, offset);
+                    Ar.Position = currentOffset;
+                }
+                else
+                {
+                    info = new FPakInfo(reader, offset);
+                }
 
                 var found = Ar.Game switch
                 {
                     EGame.GAME_FridayThe13th when info.Magic == PAK_FILE_MAGIC_FridayThe13th => true,
                     EGame.GAME_GameForPeace when info.Magic == PAK_FILE_MAGIC_GameForPeace => true,
                     EGame.GAME_Undawn when info.Magic == PAK_FILE_MAGIC_Gameloop_Undawn => true,
-                    EGame.GAME_TorchlightInfinite when info.Magic == PAK_FILE_MAGIC_TorchlightInfinite => true,
+                    EGame.GAME_TorchlightInfinite or EGame.GAME_EtheriaRestart when info.Magic == PAK_FILE_MAGIC_TorchlightInfinite => true,
                     EGame.GAME_DreamStar when info.Magic == PAK_FILE_MAGIC_DreamStar => true,
                     EGame.GAME_RacingMaster when info.Magic == PAK_FILE_MAGIC_RacingMaster => true,
                     EGame.GAME_OutlastTrials when info.Magic == PAK_FILE_MAGIC_OutlastTrials => true,
@@ -406,6 +458,7 @@ public partial class FPakInfo
                     EGame.GAME_CrystalOfAtlan when info.Magic == PAK_FILE_MAGIC_CrystalOfAtlan => true,
                     EGame.GAME_PromiseMascotAgency when info.Magic == PAK_FILE_MAGIC_PromiseMascotAgency => true,
                     EGame.GAME_WildAssault when info.Magic == PAK_FILE_MAGIC_WildAssault => true,
+                    EGame.GAME_ArenaBreakoutInifinite when info.Magic == PAK_FILE_MAGIC_ArenaBreakoutInfinite => true,
                     _ => info.Magic == PAK_FILE_MAGIC
                 };
                 if (found) return info;

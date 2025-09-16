@@ -14,6 +14,7 @@ public class UMaterialInstanceDynamic: UMaterialInstance;
 public class UMaterialInstance : UMaterialInterface
 {
     private ResolvedObject? _parent;
+    private bool bHasNonUPropertyStaticParameters = false;
     public UUnrealMaterial? Parent => _parent?.Load<UUnrealMaterial>();
     public bool bHasStaticPermutationResource;
     public FMaterialInstanceBasePropertyOverrides? BasePropertyOverrides;
@@ -22,6 +23,7 @@ public class UMaterialInstance : UMaterialInterface
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
+        if(Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 24;
         base.Deserialize(Ar, validPos);
         _parent = GetOrDefault<ResolvedObject>(nameof(Parent));
         bHasStaticPermutationResource = GetOrDefault<bool>("bHasStaticPermutationResource");
@@ -39,6 +41,7 @@ public class UMaterialInstance : UMaterialInterface
             if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.MaterialAttributeLayerParameters)
             {
                 StaticParameters = new FStaticParameterSet(Ar);
+                bHasNonUPropertyStaticParameters = true;
             }
 
             if (Ar is { Game: >= EGame.GAME_UE4_25, Owner.Provider.ReadShaderMaps: true })
@@ -57,6 +60,8 @@ public class UMaterialInstance : UMaterialInterface
                 Ar.Position = validPos;
             }
         }
+
+        if (Ar.Game == EGame.GAME_Valorant && !bHasStaticPermutationResource) Ar.Position += 8; // 0.0f and 1.0f, for all
     }
 
     public override void GetParams(CMaterialParams2 parameters, EMaterialFormat format)
@@ -82,6 +87,13 @@ public class UMaterialInstance : UMaterialInterface
         {
             writer.WritePropertyName("CachedData");
             serializer.Serialize(writer, CachedData);
+        }
+
+        //fix StaticParameters not showing in the json on versions such as 4.16
+        if (StaticParameters != null && bHasNonUPropertyStaticParameters)
+        {
+            writer.WritePropertyName("StaticParameters");
+            serializer.Serialize(writer, StaticParameters);
         }
     }
 }

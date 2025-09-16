@@ -51,9 +51,38 @@ public class USceneComponent : UActorComponent
         }
     }
 
+    // public FTransform GetRelativeTransform() => new(GetRelativeRotation(), GetRelativeLocation(), GetRelativeScale3D());
+    public FTransform GetRelativeTransform()
+    {
+        var current = this;
+        FVector? topMostScale = null;
+
+        while (current != null)
+        {
+            var foundLoc = current.TryGetValue(out FVector loc, "RelativeLocation");
+            var foundRot = current.TryGetValue(out FRotator rot, "RelativeRotation");
+            var foundScale = current.TryGetValue(out FVector scale, "RelativeScale3D");
+
+            // keep the top-most scale if found
+            if (foundScale && topMostScale == null)
+            {
+                topMostScale = scale;
+            }
+
+            if (foundLoc || foundRot)
+            {
+                return new FTransform(foundRot ? rot : FRotator.ZeroRotator, foundLoc ? loc : FVector.ZeroVector, topMostScale ?? FVector.OneVector);
+            }
+
+            current = current.Template?.Load<USceneComponent>();
+        }
+
+        return new FTransform(FRotator.ZeroRotator, FVector.ZeroVector, FVector.OneVector);
+    }
+
     public FTransform GetAbsoluteTransform()
     {
-        var newTransform = new FTransform(GetRelativeRotation(), GetRelativeLocation(), GetRelativeScale3D());
+        var newTransform = GetRelativeTransform();
         var parent = GetAttachParent();
         while (parent != null)
         {
@@ -65,7 +94,7 @@ public class USceneComponent : UActorComponent
 
     private FTransform GetComponentToWorld()
     {
-        var relativeTransform = new FTransform(GetRelativeRotation(), GetRelativeLocation(), GetRelativeScale3D());
+        var relativeTransform = GetRelativeTransform();
         if (GetAttachParent() != null) // CalcNewComponentToWorld_GeneralCases
         {
             return relativeTransform * GetAttachParent()!.GetSocketTransform("", ERelativeTransformSpace.RTS_World);
@@ -76,7 +105,7 @@ public class USceneComponent : UActorComponent
 
     public FTransform GetSocketTransform(string socketName, ERelativeTransformSpace transformSpace)
     {
-        var relativeTransform = new FTransform(GetRelativeRotation(), GetRelativeLocation(), GetRelativeScale3D());
+        var relativeTransform = GetRelativeTransform();
         if (transformSpace == ERelativeTransformSpace.RTS_World)
         {
             return relativeTransform;
@@ -98,20 +127,9 @@ public class USceneComponent : UActorComponent
         return GetComponentToWorld();
     }
 
-    public FVector GetRelativeLocation()
-    {
-        return GetOrDefault<FVector>("RelativeLocation");
-    }
-
-    public FRotator GetRelativeRotation()
-    {
-        return GetOrDefault("RelativeRotation", FRotator.ZeroRotator);
-    }
-
-    public FVector GetRelativeScale3D()
-    {
-        return GetOrDefault("RelativeScale3D", FVector.OneVector);
-    }
+    public FVector GetRelativeLocation() => GetOrDefault("RelativeLocation", FVector.ZeroVector);
+    public FRotator GetRelativeRotation() => GetOrDefault("RelativeRotation", FRotator.ZeroRotator);
+    public FVector GetRelativeScale3D() => GetOrDefault("RelativeScale3D", FVector.OneVector);
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {
