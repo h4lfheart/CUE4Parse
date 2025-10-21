@@ -108,4 +108,42 @@ public class UEAnim : UEFormatExport
         }
 
     }
+    
+    public UEAnim(string name, UAnimStreamable animStreamable, ExporterOptions options) : base(name, options)
+    {
+        var framesPerSecond = animStreamable.NumFrames / animStreamable.SequenceLength;
+        using (var metaDataChunk = new FDataChunk("METADATA", 1))
+        {
+            metaDataChunk.Write(animStreamable.NumFrames);
+            metaDataChunk.Write(framesPerSecond);
+            
+            metaDataChunk.WriteFString(animStreamable.RetargetSource.PlainText);
+            
+            metaDataChunk.Write((byte) EAdditiveAnimationType.AAT_None); // EAdditiveAnimationType
+            metaDataChunk.Write((byte) EAdditiveBasePoseType.ABPT_None); // EAdditiveBasePoseType
+            metaDataChunk.Write(0);
+            
+            metaDataChunk.Serialize(Ar);
+        }
+
+        var floatCurves = animStreamable.RawCurveData.GetOrDefault<FFloatCurve[]>("FloatCurves", []);
+        if (floatCurves.Length > 0)
+        {
+            using var curveChunk = new FDataChunk("CURVES", floatCurves.Length);
+
+            foreach (var floatCurve in floatCurves)
+            {
+                curveChunk.WriteFString(floatCurve.CurveName.Text);
+                curveChunk.Write(floatCurve.FloatCurve.Keys.Length);
+                foreach (var floatCurveKey in floatCurve.FloatCurve.Keys)
+                {
+                    var key = new FFloatKey((int) (floatCurveKey.Time * framesPerSecond), floatCurveKey.Value);
+                    key.Serialize(curveChunk);
+                }
+            }
+
+            curveChunk.Serialize(Ar);
+        }
+
+    }
 }

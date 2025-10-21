@@ -49,6 +49,27 @@ namespace CUE4Parse_Conversion.Animations
             }
         }
 
+        private AnimExporter(ExporterOptions options, USkeleton skeleton, UAnimStreamable? animStreamable = null)
+            : this(animStreamable != null ? animStreamable : skeleton, options)
+        {
+            if (animStreamable is null) return;
+            
+            using var Ar = new FArchiveWriter();
+            string ext;
+            switch (Options.AnimFormat)
+            {
+                case EAnimFormat.UEFormat:
+                    ext = "ueanim";
+                    new UEAnim(animStreamable.Name, animStreamable, Options).Save(Ar);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(Options.MeshFormat), Options.MeshFormat, "Only .ueanim is supported for UAnimStreamable export");
+            }
+            
+            // use GetExportSavePath()?
+            AnimSequences.Add(new Anim($"{PackagePath}.{ext}", Ar.GetBuffer()));
+        }
+
         private AnimExporter(ExporterOptions options, USkeleton skeleton, UAnimSequence? animSequence = null)
             : this(options, animSequence != null ? animSequence : skeleton, skeleton.ConvertAnims(animSequence))
         {
@@ -67,6 +88,7 @@ namespace CUE4Parse_Conversion.Animations
 
         }
 
+        public AnimExporter(UAnimStreamable animStreamable, ExporterOptions options) : this(options, animStreamable.Skeleton.Load<USkeleton>()!, animStreamable) { }
         public AnimExporter(UAnimSequence animSequence, ExporterOptions options) : this(options, animSequence.Skeleton.Load<USkeleton>()!, animSequence) { }
         public AnimExporter(UAnimMontage animMontage, ExporterOptions options) : this(options, animMontage.Skeleton.Load<USkeleton>()!, animMontage) { }
         public AnimExporter(UAnimComposite animComposite, ExporterOptions options) : this(options, animComposite.Skeleton.Load<USkeleton>()!, animComposite) { }
