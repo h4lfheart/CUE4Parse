@@ -19,7 +19,7 @@ public class UScriptSet
         Properties = [];
     }
 
-    public UScriptSet(FAssetArchive Ar, FPropertyTagData? tagData)
+    public UScriptSet(FAssetArchive Ar, FPropertyTagData? tagData, ReadType readType)
     {
         if (Ar.Game == EGame.GAME_StateOfDecay2 && tagData is not null)
         {
@@ -45,22 +45,27 @@ public class UScriptSet
                 EGame.GAME_ThroneAndLiberty when tagData.Name is "ExcludeMeshes" or "IncludeMeshes" => new FPropertyTagData("SoftObjectPath"),
                 EGame.GAME_MetroAwakening when tagData.Name is "SoundscapePaletteCollection" => new FPropertyTagData("SoftObjectPath"),
                 EGame.GAME_Avowed when tagData.Name.EndsWith("IDs") => new FPropertyTagData("Guid"),
+                EGame.GAME_Farlight84 => new FPropertyTagData("SoftObjectPath"),
                 EGame.GAME_DuneAwakening => DAStructs.ResolveSetPropertyInnerTypeData(tagData),
                 _ => tagData.InnerTypeData
             };
         }
 
-        var numElementsToRemove = Ar.Read<int>();
-        for (var i = 0; i < numElementsToRemove; i++)
+        if (readType != ReadType.RAW)
         {
-            FPropertyTagType.ReadPropertyTagType(Ar, innerType, tagData.InnerTypeData, ReadType.ARRAY);
+            var numElementsToRemove = Ar.Read<int>();
+            for (var i = 0; i < numElementsToRemove; i++)
+            {
+                FPropertyTagType.ReadPropertyTagType(Ar, innerType, tagData.InnerTypeData, ReadType.ARRAY);
+            }
         }
 
+        var type = readType == ReadType.RAW ? ReadType.RAW : ReadType.ARRAY;
         var num = Ar.Read<int>();
         Properties = new List<FPropertyTagType>(num);
         for (var i = 0; i < num; i++)
         {
-            var property = FPropertyTagType.ReadPropertyTagType(Ar, innerType, tagData.InnerTypeData, ReadType.ARRAY);
+            var property = FPropertyTagType.ReadPropertyTagType(Ar, innerType, tagData.InnerTypeData, type);
             if (property != null)
                 Properties.Add(property);
             else
