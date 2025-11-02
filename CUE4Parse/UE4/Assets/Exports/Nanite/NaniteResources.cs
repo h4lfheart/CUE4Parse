@@ -73,7 +73,7 @@ public class FNaniteResources
                 HierarchyNodes[i] = new FPackedHierarchyNode(Ar, i);
             }
             HierarchyRootOffsets = Ar.ReadArray<uint>();
-            PageDependencies = Ar.ReadArray<uint>();
+            PageDependencies = Ar.ReadArray(() => Ar.Game >= EGame.GAME_UE5_7 ? Ar.Read<ushort>() : Ar.Read<uint>());
             if (Ar.Game >= EGame.GAME_UE5_6)
             {
                 AssemblyTransforms = Ar.ReadArray<FMatrix3x4>();
