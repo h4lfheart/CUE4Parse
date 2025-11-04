@@ -671,24 +671,7 @@ public class FObjectProperty : FProperty
     }
 }
 
-public class FSoftClassProperty : FObjectProperty
-{
-    public FPackageIndex MetaClass;
-
-    public override void Deserialize(FAssetArchive Ar)
-    {
-        base.Deserialize(Ar);
-        MetaClass = new FPackageIndex(Ar);
-    }
-
-    protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
-    {
-        base.WriteJson(writer, serializer);
-
-        writer.WritePropertyName("MetaClass");
-        serializer.Serialize(writer, MetaClass);
-    }
-}
+public class FSoftClassProperty : FClassProperty;
 
 public class FSoftObjectProperty : FObjectProperty;
 
@@ -797,6 +780,31 @@ public class FVerseFunctionProperty : FProperty
 
         writer.WritePropertyName("Struct");
         serializer.Serialize(writer, Function);
+    }
+}
+
+public class FVerseClassProperty : FClassProperty
+{
+    public bool bRequiresConcrete;
+    public bool bRequiresCastable;
+    
+    public override void Deserialize(FAssetArchive Ar)
+    {
+        base.Deserialize(Ar);
+
+        bRequiresConcrete = Ar.ReadBoolean();
+        bRequiresCastable = Ar.ReadBoolean();
+    }
+
+    protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+    {
+        base.WriteJson(writer, serializer);
+        
+        writer.WritePropertyName(nameof(bRequiresConcrete));
+        serializer.Serialize(writer, bRequiresConcrete);
+        
+        writer.WritePropertyName(nameof(bRequiresCastable));
+        serializer.Serialize(writer, bRequiresCastable);
     }
 }
 
