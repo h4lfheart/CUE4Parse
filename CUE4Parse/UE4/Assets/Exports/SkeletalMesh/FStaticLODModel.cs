@@ -544,7 +544,7 @@ public class FStaticLODModel
             }
         }
 
-        if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.SkeletalHalfEdgeData)
+        if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.SkeletalHalfEdgeData && Ar.Game is not EGame.GAME_Fortnite_S27)
         {
             const byte MeshDeformerStripFlag = 1;
             var meshDeformerStripFlags = Ar.Read<FStripDataFlags>();
