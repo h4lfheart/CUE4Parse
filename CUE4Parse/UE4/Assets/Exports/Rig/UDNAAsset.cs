@@ -115,6 +115,31 @@ public class UDNAAsset : UObject
         }
     }
 
+    public int GetRawControlCount()
+    {
+        return Definition.RawControlNames.Length;
+    }
+
+    public string[] GetRawControlNames()
+    {
+        return Definition.RawControlNames;
+    }
+
+    public string GetRawControlName(int index)
+    {
+        return index >= GetRawControlCount() ? throw new IndexOutOfRangeException($"Index {index} is greater than total raw control count") : Definition.RawControlNames[index];
+    }
+
+    public int GetJointCount()
+    {
+        return Definition.JointNames.Length;
+    }
+
+    public string GetJointName(int index)
+    {
+        return index >= GetJointCount() ? throw new IndexOutOfRangeException($"Index {index} is greater than total joint count") : Definition.JointNames[index];
+    }
+
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {
         base.WriteJson(writer, serializer);
