@@ -20,6 +20,7 @@ using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Exports.Wwise;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
+using CUE4Parse.UE4.CriWare.Readers;
 using CUE4Parse.UE4.FMod;
 using CUE4Parse.UE4.FMod.Objects;
 using CUE4Parse.UE4.Kismet;
@@ -429,15 +430,7 @@ public class DelegatePropertyConverter : JsonConverter<DelegateProperty>
 {
     public override void WriteJson(JsonWriter writer, DelegateProperty value, JsonSerializer serializer)
     {
-        writer.WriteStartObject();
-
-        writer.WritePropertyName("Num");
-        writer.WriteValue(value.Num);
-
-        writer.WritePropertyName("Name");
         serializer.Serialize(writer, value.Value);
-
-        writer.WriteEndObject();
     }
 
     public override DelegateProperty ReadJson(JsonReader reader, Type objectType, DelegateProperty existingValue, bool hasExistingValue,
@@ -885,7 +878,7 @@ public class FPackageFileSummaryConverter : JsonConverter<FPackageFileSummary>
         writer.WriteValue(value.FileVersionLicenseeUE.ToStringBitfield());
 
         writer.WritePropertyName("CustomVersions");
-        serializer.Serialize(writer, value.CustomVersionContainer.Versions);
+        serializer.Serialize(writer, value.CustomVersionContainer?.Versions);
 
         writer.WritePropertyName(nameof(value.bUnversioned));
         writer.WriteValue(value.bUnversioned);
@@ -3371,6 +3364,45 @@ public class FmodSoundBankConverter : JsonConverter<FmodSoundBank>
     }
 
     public override FmodSoundBank ReadJson(JsonReader reader, Type objectType, FmodSoundBank existingValue, bool hasExistingValue, JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class AcbReaderConverter : JsonConverter<AcbReader>
+{
+    public override void WriteJson(JsonWriter writer, AcbReader value, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+
+        writer.WritePropertyName(nameof(value.AtomCueSheetData));
+        serializer.Serialize(writer, value.AtomCueSheetData);
+
+        writer.WriteEndObject();
+    }
+
+    public override AcbReader ReadJson(JsonReader reader, Type objectType, AcbReader existingValue, bool hasExistingValue, JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class AwbReaderConverter : JsonConverter<AwbReader>
+{
+    public override void WriteJson(JsonWriter writer, AwbReader value, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+
+        writer.WritePropertyName(nameof(value.Waves));
+        serializer.Serialize(writer, value.Waves);
+
+        writer.WritePropertyName(nameof(value.Subkey));
+        serializer.Serialize(writer, value.Subkey);
+
+        writer.WriteEndObject();
+    }
+
+    public override AwbReader ReadJson(JsonReader reader, Type objectType, AwbReader existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
         throw new NotImplementedException();
     }

@@ -59,7 +59,7 @@ public class ULandscapeComponent: UPrimitiveComponent
             GrassData = new FLandscapeComponentGrassData(Ar);
         }
 
-        if (Ar.IsFilterEditorOnly)
+        if (!Ar.IsFilterEditorOnly)
         {
             Ar.Position += sizeof(int); // SelectedType
         }
@@ -69,6 +69,14 @@ public class ULandscapeComponent: UPrimitiveComponent
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.LANDSCAPE_PLATFORMDATA_COOKING && !Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject))
         {
             bCooked = Ar.ReadBoolean();
+        }
+
+        if (Ar.Game is EGame.GAME_Aion2)
+        {
+            var bCookedMobileData = Ar.ReadBoolean();
+            var some = Ar.ReadBulkArray<FVector>();
+            var idk = Ar.ReadBulkArray<ushort>();
+            return;
         }
 
         if (Ar.Game < EGame.GAME_UE5_1 && Ar.Position + 4 <= validPos)

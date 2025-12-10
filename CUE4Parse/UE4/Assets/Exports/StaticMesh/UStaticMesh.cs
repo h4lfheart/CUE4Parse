@@ -29,7 +29,7 @@ public class UStaticMesh : UObject
         Materials = [];
         LODForCollision = GetOrDefault(nameof(LODForCollision), 0);
 
-        var stripDataFlags = Ar.Read<FStripDataFlags>();
+        var stripDataFlags = new FStripDataFlags(Ar);
         bCooked = Ar.ReadBoolean();
         BodySetup = new FPackageIndex(Ar);
 
@@ -42,20 +42,22 @@ public class UStaticMesh : UObject
             {
                  var dummyThumbnailAngle = new FRotator(Ar);
                  var dummyThumbnailDistance = Ar.Read<float>();
-             }
+            }
 
-             var highResSourceMeshName = Ar.ReadFString();
-             var highResSourceMeshCRC = Ar.Read<uint>();
-
-             if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.DeprecatedHighResSourceMesh)
-             {
-                 var Deprecated_HighResSourceMeshName = Ar.ReadFString();
-                 var Deprecated_HighResSourceMeshCRC = Ar.Read<uint>();
-             }
+            if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.DeprecatedHighResSourceMesh)
+            {
+                var Deprecated_HighResSourceMeshName = Ar.ReadFString();
+                var Deprecated_HighResSourceMeshCRC = Ar.Read<uint>();
+            }
         }
 
         LightingGuid = Ar.Read<FGuid>(); // LocalLightingGuid
         Sockets = Ar.ReadArray(() => new FPackageIndex(Ar));
+
+        if (!Ar.IsFilterEditorOnly)
+        {
+            return; // so it doesn't throw
+        }
 
         // https://github.com/EpicGames/UnrealEngine/blob/ue5-main/Engine/Source/Runtime/Engine/Private/StaticMesh.cpp#L6701
         if (bCooked)
@@ -107,7 +109,7 @@ public class UStaticMesh : UObject
             }
         }
 
-        if (Ar.Game is EGame.GAME_FateTrigger or EGame.GAME_GhostsofTabor) Ar.Position += 4;
+        if (Ar.Game is EGame.GAME_FateTrigger or EGame.GAME_GhostsofTabor or EGame.GAME_Aion2) Ar.Position += 4;
 
         if (Ar.Game >= EGame.GAME_UE4_14)
         {
@@ -121,7 +123,7 @@ public class UStaticMesh : UObject
             if (FEditorObjectVersion.Get(Ar) >= FEditorObjectVersion.Type.RefactorMeshEditorMaterials)
             {
                 // UE4.14+ - "Materials" are deprecated, added StaticMaterials
-                StaticMaterials = bHasSpeedTreeWind ? GetOrDefault("StaticMaterials",  Array.Empty<FStaticMaterial>()) : Ar.ReadArray(() => new FStaticMaterial(Ar));
+                StaticMaterials = bHasSpeedTreeWind ? GetOrDefault("StaticMaterials", Array.Empty<FStaticMaterial>()) : Ar.ReadArray(() => new FStaticMaterial(Ar));
 
                 Materials = new ResolvedObject[StaticMaterials.Length];
                 for (var i = 0; i < Materials.Length; i++)
