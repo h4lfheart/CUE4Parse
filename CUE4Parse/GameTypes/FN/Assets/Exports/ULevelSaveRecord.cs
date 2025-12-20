@@ -166,18 +166,47 @@ namespace CUE4Parse.GameTypes.FN.Assets.Exports
 
         public FStructFallback ReadActorData(IPackage owner, ELevelSaveRecordVersion SaveVersion)
         {
-            if (ActorData != null && !bUsingRecordDataReferenceTable)
+            if (ActorData is null)
+                return new FStructFallback();
+            
+            var Ar = new FAssetArchive(new FByteArchive("ActorData Reader", ActorData), owner);
+            var flags = owner.Summary.PackageFlags;
+            owner.Summary.PackageFlags &= ~EPackageFlags.PKG_UnversionedProperties;
+            var props = bUsingRecordDataReferenceTable ? ReadReferenceTableActorData(new FObjectAndNameAsStringProxyArchive(Ar)) : new FStructFallback(new FLevelSaveRecordArchive(Ar, SaveVersion));
+            owner.Summary.PackageFlags = flags; // restore flags
+            return props;
+        }
+
+        private FStructFallback ReadReferenceTableActorData(FAssetArchive Ar)
+        {
+            var magic = Ar.Read<uint>(); // E9 9D 18 A2
+            Ar.Position += sizeof(ushort); // file version?
+            Ar.Position += sizeof(ushort); // reserved
+            Ar.Position += sizeof(uint); // some sort of data count?
+
+            var unrealVersionMajor = Ar.Read<ushort>();
+            var unrealVersionMinor = Ar.Read<ushort>();
+
+            Ar.Position += 6; // unsure
+
+            var fortniteVersionString = Ar.ReadFString();
+
+            Ar.Position += sizeof(uint); // padding, 0xFFFFFFFF
+
+            Ar.Position += sizeof(ushort); // 01 03
+        
+            var guidTable = Ar.ReadArray<(FGuid, int)>(() =>
             {
-                var Ar = new FLevelSaveRecordArchive(new FAssetArchive(new FByteArchive("ActorData Reader", ActorData), owner), SaveVersion);
-                var flags = owner.Summary.PackageFlags;
-                owner.Summary.PackageFlags &= ~EPackageFlags.PKG_UnversionedProperties;
-                var props = new FStructFallback(Ar);
-                owner.Summary.PackageFlags = flags; // restore flags
-                return props;
-            }
-            return new FStructFallback();
+                var guid = Ar.Read<FGuid>();
+                var guidData = Ar.Read<int>();
+                return (guid, guidData);
+            });
+        
+            return new FStructFallback(Ar);
         }
     }
+    
+    
 
     public class FActorComponentRecord
     {
