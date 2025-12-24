@@ -134,6 +134,7 @@ public enum EGame : uint
     GAME_UE5_0 = GameUtils.GameUe5Base + (0 << 16),
         GAME_MeetYourMaker = GAME_UE5_0 + 1,
         GAME_BlackMythWukong = GAME_UE5_0 + 2,
+        GAME_Fortnite_Ch3 = GAME_UE5_0 + 3,
     GAME_UE5_1 = GameUtils.GameUe5Base + (1 << 16),
         GAME_3on3FreeStyleRebound = GAME_UE5_1 + 1,
         GAME_Stalker2 = GAME_UE5_1 + 2,
@@ -220,6 +221,7 @@ public static class GameUtils
         {
             return game switch
             {
+                    EGame.GAME_Fortnite_Ch3 => new FPackageFileVersion(522, 1002),
                 < EGame.GAME_UE5_1 => new FPackageFileVersion(522, 1004),
                 < EGame.GAME_UE5_2 => new FPackageFileVersion(522, 1008),
                     EGame.GAME_TheFirstDescendant => new FPackageFileVersion(522, 1002),
