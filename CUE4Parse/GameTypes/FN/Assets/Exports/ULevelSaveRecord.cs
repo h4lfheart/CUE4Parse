@@ -168,13 +168,22 @@ namespace CUE4Parse.GameTypes.FN.Assets.Exports
         {
             if (ActorData is null)
                 return new FStructFallback();
-            
-            var Ar = new FAssetArchive(new FByteArchive("ActorData Reader", ActorData), owner);
-            var flags = owner.Summary.PackageFlags;
-            owner.Summary.PackageFlags &= ~EPackageFlags.PKG_UnversionedProperties;
-            var props = bUsingRecordDataReferenceTable ? ReadReferenceTableActorData(new FObjectAndNameAsStringProxyArchive(Ar)) : new FStructFallback(new FLevelSaveRecordArchive(Ar, SaveVersion));
-            owner.Summary.PackageFlags = flags; // restore flags
-            return props;
+
+            try
+            {
+                using var Ar = new FAssetArchive(new FByteArchive("ActorData Reader", ActorData), owner);
+                var flags = owner.Summary.PackageFlags;
+                owner.Summary.PackageFlags &= ~EPackageFlags.PKG_UnversionedProperties;
+                var props = bUsingRecordDataReferenceTable
+                    ? ReadReferenceTableActorData(new FObjectAndNameAsStringProxyArchive(Ar))
+                    : new FStructFallback(new FLevelSaveRecordArchive(Ar, SaveVersion));
+                owner.Summary.PackageFlags = flags; // restore flags
+                return props;
+            }
+            catch
+            {
+                return new FStructFallback();
+            }
         }
 
         private FStructFallback ReadReferenceTableActorData(FAssetArchive Ar)
