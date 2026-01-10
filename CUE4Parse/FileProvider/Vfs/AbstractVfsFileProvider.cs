@@ -217,6 +217,11 @@ namespace CUE4Parse.FileProvider.Vfs
             }
         }
 
+        public void RegisterTextureCache(FileInfo file)
+        {
+            TextureCachePaths[Path.GetFileNameWithoutExtension(file.Name)] = file.FullName;
+        }
+
         protected void PostLoadReader(AbstractAesVfsReader reader, bool isConcurrent = true)
         {
             if (reader.IsEncrypted)
@@ -426,11 +431,6 @@ namespace CUE4Parse.FileProvider.Vfs
             return false;
         }
 
-        /// <summary>
-        /// load .ini files and verify the validity of the main encryption key against them
-        /// in cases where archives are not encrypted, but their packages are, that is one way to tell if the key is correct
-        /// if the key is not correct, archives will be removed from the pool of mounted archives no matter how many encrypted packages they have
-        /// </summary>
         public void PostMount()
         {
             var workingAes = LoadIniConfigs();
