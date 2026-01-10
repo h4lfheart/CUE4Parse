@@ -259,7 +259,7 @@ public static class TextureDecoder
                     Bc1.Decompress(bytes, sizeX, sizeY, out data);
                 else
                     data = DXTDecoder.DXT1(bytes, sizeX, sizeY, sizeZ);
-                colorType = UseAssetRipperTextureDecoder ? EPixelFormat.PF_B8G8R8A8 : EPixelFormat.PF_R8G8B8A8;
+                colorType = EPixelFormat.PF_R8G8B8A8;
                 break;
             }
             case EPixelFormat.PF_DXT3:
@@ -281,7 +281,7 @@ public static class TextureDecoder
                     Bc3.Decompress(bytes, sizeX, sizeY, out data);
                 else
                     data = DXTDecoder.DXT5(bytes, sizeX, sizeY, sizeZ);
-                colorType = UseAssetRipperTextureDecoder ? EPixelFormat.PF_B8G8R8A8 : EPixelFormat.PF_R8G8B8A8;
+                colorType = EPixelFormat.PF_R8G8B8A8;
                 break;
             case EPixelFormat.PF_ASTC_4x4:
             case EPixelFormat.PF_ASTC_6x6:
@@ -315,7 +315,7 @@ public static class TextureDecoder
                 else
                     data = BCDecoder.BC4(bytes, sizeX, sizeY, sizeZ);
 
-                colorType = UseAssetRipperTextureDecoder ? EPixelFormat.PF_B8G8R8A8 : EPixelFormat.PF_R8G8B8A8;
+                colorType = EPixelFormat.PF_B8G8R8A8;
                 break;
             case EPixelFormat.PF_BC5:
                 if (UseAssetRipperTextureDecoder)
@@ -326,7 +326,7 @@ public static class TextureDecoder
                 for (var i = 0; i < sizeX * sizeY; i++)
                     data[i * 4] = BCDecoder.GetZNormal(data[i * 4 + 2], data[i * 4 + 1]);
 
-                colorType = UseAssetRipperTextureDecoder ? EPixelFormat.PF_B8G8R8A8 : EPixelFormat.PF_R8G8B8A8;
+                colorType = EPixelFormat.PF_R8G8B8A8;
                 break;
             case EPixelFormat.PF_BC6H:
                 if (UseAssetRipperTextureDecoder)
@@ -348,7 +348,7 @@ public static class TextureDecoder
                 else
                     data = DetexHelper.DecodeDetexLinear(bytes, sizeX, sizeY * sizeZ, false, DetexTextureFormat.DETEX_TEXTURE_FORMAT_BPTC, DetexPixelFormat.DETEX_PIXEL_FORMAT_BGRA8);
 
-                colorType = UseAssetRipperTextureDecoder ? EPixelFormat.PF_B8G8R8A8 : EPixelFormat.PF_R8G8B8A8;
+                colorType = EPixelFormat.PF_B8G8R8A8;
                 break;
             case EPixelFormat.PF_ETC1:
                 data = DetexHelper.DecodeDetexLinear(bytes, sizeX, sizeY, false, DetexTextureFormat.DETEX_TEXTURE_FORMAT_ETC1, DetexPixelFormat.DETEX_PIXEL_FORMAT_BGRA8);
