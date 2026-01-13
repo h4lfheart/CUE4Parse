@@ -488,6 +488,48 @@ namespace CUE4Parse.FileProvider.Vfs
             Files.AddFiles(onDemandFiles);
         }
 
+        public List<GameFile> ScanForPackageRefs(GameFile asset)
+        {
+            if (asset is not FIoStoreEntry { IsUePackage: true })
+                return [];
+
+            var package = LoadPackage(asset);
+            var id = FPackageId.FromName(package.Name);
+            var refList = new List<GameFile>();
+            foreach (var reader in MountedVfs)
+            {
+                if (reader is not IoStoreReader ioReader || ioReader.ContainerHeader is not { StoreEntries.Length: > 0 } header)
+                    continue;
+                for (var i = 0; i < header.StoreEntries.Length; i++)
+                {
+                    if (header.StoreEntries[i].ImportedPackages.Contains(id) && ioReader.PackageIdIndex.TryGetValue(header.PackageIds[i], out var file))
+                    {
+                        refList.Add(file);
+                    }
+                }
+            }
+            return refList;
+        }
+
+        public FFilePackageStoreEntry? TryFindStoreEntry(FPackageId packageId)
+        {
+            FFilePackageStoreEntry? storeEntry = null;
+            foreach (var reader in MountedVfs)
+            {
+                if (reader is not IoStoreReader ioReader || ioReader.ContainerHeader is not { StoreEntries.Length: > 0 } header)
+                    continue;
+
+                var idx = Array.IndexOf(header.PackageIds, packageId);
+                if (idx != -1)
+                {
+                    storeEntry = header.StoreEntries[idx];
+                    break;
+                }
+
+            }
+            return storeEntry;
+        }
+
         public override void Dispose()
         {
             base.Dispose();
