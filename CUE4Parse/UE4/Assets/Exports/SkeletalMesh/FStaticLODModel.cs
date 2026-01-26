@@ -536,12 +536,7 @@ public class FStaticLODModel
 
         if (FUE5MainStreamObjectVersion.Get(Ar) >= FUE5MainStreamObjectVersion.Type.SkeletalVertexAttributes)
         {
-            var count = Ar.Read<int>();
-            VertexAttributeBuffers = new Dictionary<FName, FSkeletalMeshAttributeVertexBuffer>(count);
-            for (int i = 0; i < count; i++)
-            {
-                VertexAttributeBuffers[Ar.ReadFName()] = new FSkeletalMeshAttributeVertexBuffer(Ar);
-            }
+            VertexAttributeBuffers = Ar.ReadMap(Ar.ReadFName, () => new FSkeletalMeshAttributeVertexBuffer(Ar));
         }
 
         if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.SkeletalHalfEdgeData && Ar.Game is not EGame.GAME_Fortnite_S27)

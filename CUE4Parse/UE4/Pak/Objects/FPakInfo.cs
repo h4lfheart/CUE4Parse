@@ -45,6 +45,7 @@ public partial class FPakInfo
     public const uint PAK_FILE_MAGIC_CrystalOfAtlan = 0x22ce976a;
     public const uint PAK_FILE_MAGIC_PromiseMascotAgency = 0x11adde11;
     public const uint PAK_FILE_MAGIC_ArenaBreakoutInfinite = 0x53647586;
+    public const uint PAK_FILE_MAGIC_AssaultFireFuture = 0x4F6FAE86;
 
     public const int COMPRESSION_METHOD_NAME_LEN = 32;
 
@@ -246,7 +247,7 @@ public partial class FPakInfo
         IndexSize = Ar.Read<long>();
         IndexHash = new FSHAHash(Ar);
 
-        if (Ar.Game == EGame.GAME_DreamStar)
+        if (Ar.Game is EGame.GAME_DreamStar)
         {
             (IndexOffset, IndexSize) = (IndexSize, IndexOffset);
         }

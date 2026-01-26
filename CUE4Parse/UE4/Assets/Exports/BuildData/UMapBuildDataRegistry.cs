@@ -342,6 +342,7 @@ public class FMeshMapBuildData
         };
 
         if (Ar.Game == EGame.GAME_ArenaBreakoutInfinite) Ar.Position += Ar.Read<int>() == 2 ? 156 : 4; // FTransferLightMap
+     
 
         ShadowMap = Ar.Read<EShadowMapType>() switch
         {

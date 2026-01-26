@@ -34,7 +34,8 @@ public readonly struct FCompressedVisibilityChunk : IUStruct
     {
         bCompressed = Ar.ReadBoolean();
         UncompressedSize = Ar.Read<int>();
-        Data = Ar.ReadArray<byte>();
+        Data = [];
+        Ar.SkipFixedArray(1);
     }
 }
 
@@ -70,6 +71,7 @@ public readonly struct FPrecomputedVisibilityHandler : IUStruct
         PrecomputedVisibilityCellBucketSizeXY = Ar.Read<int>();
         PrecomputedVisibilityNumCellBuckets = Ar.Read<int>();
         PrecomputedVisibilityCellBuckets = Ar.ReadArray(() => new FPrecomputedVisibilityBucket(Ar));
+     
     }
 }
 

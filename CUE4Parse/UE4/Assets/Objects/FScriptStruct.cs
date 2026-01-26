@@ -2,6 +2,7 @@ using System;
 using CUE4Parse.GameTypes._2XKO.Assets.Exports;
 using CUE4Parse.GameTypes.Borderlands4.Assets.Objects;
 using CUE4Parse.GameTypes.Brickadia.Objects;
+using CUE4Parse.GameTypes.SMG.UE4.Assets.Objects;
 using CUE4Parse.GameTypes.DuneAwakening.Assets.Objects;
 using CUE4Parse.GameTypes.FN.Objects;
 using CUE4Parse.GameTypes.Gothic1R.Assets.Objects;
@@ -9,6 +10,7 @@ using CUE4Parse.GameTypes.L2KD.Objects;
 using CUE4Parse.GameTypes.MA.Objects;
 using CUE4Parse.GameTypes.MindsEye.Objects;
 using CUE4Parse.GameTypes.NetEase.MAR.Objects;
+using CUE4Parse.GameTypes.NMZ.Assets;
 using CUE4Parse.GameTypes.OtherGames.Objects;
 using CUE4Parse.GameTypes.OuterWorlds2.Objects;
 using CUE4Parse.GameTypes.PUBG.Assets.Objects;
@@ -69,6 +71,7 @@ public class FScriptStruct
             "Box2D" => type == ReadType.ZERO ? new FBox2D() : new FBox2D(Ar),
             "Box2f" => type == ReadType.ZERO ? new TBox2<float>() : new TBox2<float>(Ar),
             "Box3f" => type == ReadType.ZERO ? new TBox3<float>() : new TBox3<float>(Ar),
+            "CapsuleShape" => type == ReadType.ZERO ? new FCapsuleShape() : new FCapsuleShape(Ar),
             "Color" => type == ReadType.ZERO ? new FColor() : Ar.Read<FColor>(),
             "ColorMaterialInput" when FFortniteMainBranchObjectVersion.Get(Ar) < FFortniteMainBranchObjectVersion.Type.MaterialInputUsesLinearColor
                 => type == ReadType.ZERO ? new FMaterialInput<FColor>() : new FMaterialInput<FColor>(Ar),

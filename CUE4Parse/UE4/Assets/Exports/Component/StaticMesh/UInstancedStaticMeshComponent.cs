@@ -129,7 +129,7 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
             Ar.Position += (long) renderDataSizeBytes;
         }
 
-        if (Ar.Game == EGame.GAME_Valorant) Ar.Position += 4;
+        if (Ar.Game is EGame.GAME_Valorant) Ar.Position += 4;
     }
 
     public FInstancedStaticMeshInstanceData[] GetInstances() // PerInstanceSMData

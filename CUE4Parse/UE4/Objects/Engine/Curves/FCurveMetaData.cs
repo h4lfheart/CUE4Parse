@@ -25,6 +25,7 @@ public class FCurveMetaData
             MaxLOD = Ar.Game == EGame.GAME_KingdomHearts3 ? Ar.Read<int>() : Ar.Read<byte>();
         }
 
+
         if (Ar.Game == EGame.GAME_FinalFantasy7Remake)
         {
             // Cutscene mat replacements
