@@ -18,7 +18,6 @@ public class FStringTable
 
         KeysToEntries = Ar.ReadMap(Ar.ReadFString, () =>
         {
-            return CodeVein2StringEncryption.CodeVein2EncryptedFString(Ar, ECV2DecryptionMode.StringTable);
             var value = Ar.ReadFString();
             if (Ar.Game == EGame.GAME_MarvelRivals) Ar.Position += 4;
             if (Ar.Game == EGame.GAME_LostRecordsBloomAndRage)
