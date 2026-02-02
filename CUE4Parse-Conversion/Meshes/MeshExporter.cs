@@ -12,6 +12,7 @@ using CUE4Parse_Conversion.Meshes.PSK;
 using CUE4Parse_Conversion.Meshes.UEFormat;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
+using CUE4Parse.UE4.Assets.Exports.Nanite;
 using CUE4Parse.UE4.Assets.Exports.Rig;
 using CUE4Parse.UE4.Objects.PhysicsEngine;
 using CUE4Parse.UE4.Objects.UObject;
@@ -23,7 +24,10 @@ namespace CUE4Parse_Conversion.Meshes
     public class MeshExporter : ExporterBase
     {
         public readonly List<Mesh> MeshLods;
+        public Mesh? NaniteMesh;
         public readonly List<DNAExporter> DNAAssets = [];
+
+        public bool HasValidNaniteData;
 
         public MeshExporter(USkeleton originalSkeleton, ExporterOptions options) : base(originalSkeleton, options)
         {
@@ -64,7 +68,7 @@ namespace CUE4Parse_Conversion.Meshes
         {
             MeshLods = new List<Mesh>();
 
-            if (!originalMesh.TryConvert(splineMeshComponent, out var convertedMesh, options.NaniteMeshFormat) || convertedMesh.LODs.Count == 0)
+            if (!originalMesh.TryConvert(splineMeshComponent, out var convertedMesh, out var naniteLod, options.NaniteMeshFormat) || convertedMesh.LODs.Count == 0)
             {
                 Log.Logger.Warning($"Mesh '{ExportName}' has no LODs");
                 return;
@@ -73,6 +77,38 @@ namespace CUE4Parse_Conversion.Meshes
             var path = GetExportSavePath();
             if (splineMeshComponent != null) {
                 path += string.Concat("-", splineMeshComponent.GetMeshId().AsSpan(0, 6));
+            }
+
+            if (naniteLod is not null)
+            {
+                HasValidNaniteData = true;
+                
+                switch (options.NaniteMeshFormat)
+                {
+                    case ENaniteMeshFormat.OnlyNaniteLOD:
+                        foreach (var lod in convertedMesh.LODs) lod.Dispose();
+                        convertedMesh.LODs.Clear();
+                        convertedMesh.LODs.Add(naniteLod);
+                        break;
+                    case ENaniteMeshFormat.AllLayersNaniteFirst:
+                        convertedMesh.LODs.Insert(0, naniteLod);
+                        break;
+                    case ENaniteMeshFormat.AllLayersNaniteLast:
+                        convertedMesh.LODs.Add(naniteLod);
+                        break;
+                    case ENaniteMeshFormat.OnlyNormalLODs when convertedMesh.LODs.Count == 0:
+                        convertedMesh.LODs.Add(naniteLod);
+                        break;
+                    case ENaniteMeshFormat.NaniteSeparateFile:
+                        ExportNaniteSeparateFile(naniteLod, path, originalMesh, options);
+                        break;
+                }
+            }
+            
+            if (options.NaniteMeshFormat == ENaniteMeshFormat.NaniteSeparateFile && naniteLod is not null)
+            {
+                var naniteMesh = new CStaticMesh();
+                naniteMesh.LODs.Add(naniteLod);
             }
 
             if (Options.MeshFormat == EMeshFormat.UEFormat)
@@ -210,6 +246,41 @@ namespace CUE4Parse_Conversion.Meshes
                 i++;
             }
         }
+    
+        private void ExportNaniteSeparateFile(CStaticMeshLod naniteLod, string basePath, UStaticMesh originalMesh, ExporterOptions options)
+        {
+            using var Ar = new FArchiveWriter();
+            var materialExports = options.ExportMaterials ? new List<MaterialExporter2>() : null;
+            string ext;
+            var nanitePath = $"{basePath}_Nanite";
+
+            switch (Options.MeshFormat)
+            {
+                case EMeshFormat.ActorX:
+                    ext = "pskx";
+                    new ActorXMesh(naniteLod, materialExports, originalMesh.Sockets, Options).Save(Ar);
+                    break;
+                case EMeshFormat.UEFormat:
+                    ext = "uemodel";
+                    var naniteMesh = new CStaticMesh();
+                    naniteMesh.LODs.Add(naniteLod);
+                    new UEModel(originalMesh.Name, naniteMesh, originalMesh.BodySetup, Options).Save(Ar);
+                    break;
+                case EMeshFormat.Gltf2:
+                    ext = "glb";
+                    new Gltf(ExportName, naniteLod, materialExports, Options).Save(Options.MeshFormat, Ar);
+                    break;
+                case EMeshFormat.OBJ:
+                    ext = "obj";
+                    new Gltf(ExportName, naniteLod, materialExports, Options).Save(Options.MeshFormat, Ar);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(Options.MeshFormat), Options.MeshFormat, null);
+            }
+
+            NaniteMesh = new Mesh($"{nanitePath}.{ext}", Ar.GetBuffer(),
+                materialExports ?? []);
+        }
 
         /// <param name="baseDirectory"></param>
         /// <param name="label"></param>
@@ -225,6 +296,11 @@ namespace CUE4Parse_Conversion.Meshes
             for (var i = 0; i < DNAAssets.Count; i++)
             {
                 DNAAssets[i].TryWriteToDir(baseDirectory, out _, out _);
+            }
+
+            if (NaniteMesh is not null && Options.NaniteMeshFormat == ENaniteMeshFormat.NaniteSeparateFile)
+            {
+                NaniteMesh.TryWriteToDir(baseDirectory, out _, out _);
             }
 
             var outText = "LOD ";

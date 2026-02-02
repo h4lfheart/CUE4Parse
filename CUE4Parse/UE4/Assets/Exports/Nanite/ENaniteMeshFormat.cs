@@ -12,4 +12,6 @@ public enum ENaniteMeshFormat
     AllLayersNaniteFirst,
     [Description("Normal LODs first, then Nanite LOD")]
     AllLayersNaniteLast,
+    [Description("Export Nanite as a Separate File")]
+    NaniteSeparateFile,
 }
