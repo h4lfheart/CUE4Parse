@@ -73,10 +73,16 @@ public class FStaticMeshVertexBuffer
                 itemCount = Ar.Read<int>();
                 position = Ar.Position;
 
-                if (itemCount != NumVertices * NumTexCoords)
+                // https://github.com/EpicGames/UnrealEngine/blob/f0033752c5d84fe622f8742052df86f54d814611/Engine/Source/Runtime/Engine/Private/Rendering/StaticMeshVertexBuffer.cpp#L15
+                var padding = NumVertices > 0 ? NumTexCoords % 2 : 0;
+                var texCoordNumVerts = NumVertices;
+                if (itemCount != texCoordNumVerts * NumTexCoords)
+                    texCoordNumVerts += padding;
+                
+                if (itemCount != texCoordNumVerts * NumTexCoords)
                     throw new ParserException($"NumVertices={itemCount} != {NumVertices * NumTexCoords}");
 
-                var uv = Ar.ReadArray(NumVertices, () => FStaticMeshUVItem.SerializeTexcoords(Ar, NumTexCoords, UseFullPrecisionUVs));
+                var uv = Ar.ReadArray(texCoordNumVerts, () => FStaticMeshUVItem.SerializeTexcoords(Ar, NumTexCoords, UseFullPrecisionUVs));
                 if (Ar.Position - position != itemCount * itemSize)
                     throw new ParserException($"Read incorrect amount of Texture Coordinate bytes, at {Ar.Position}, should be: {position + itemSize * itemCount} behind: {position + (itemSize * itemCount) - Ar.Position}");
 
