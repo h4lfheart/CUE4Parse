@@ -238,13 +238,14 @@ public static class TextureDecoder
         }
     }
 
-    public static unsafe CTexture[]? DecodeTextureArray(this UTexture2DArray texture, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
+    public static unsafe CTexture[]? DecodeTextureArray(this UTexture2DArray texture, FTexture2DMipMap? mip = null,
+        ETexturePlatform platform = ETexturePlatform.DesktopMobile)
     {
-        var mip = texture.GetFirstMip();
+        mip ??= texture.GetFirstMip();
 
         if (mip is null)
             return null;
-
+        
         var sizeX = mip.SizeX;
         var sizeY = mip.SizeY;
         var sizeZ = mip.SizeZ;
@@ -258,7 +259,8 @@ public static class TextureDecoder
         DecodeTexture(texture, mip, sizeX, sizeY, sizeZ, platform, out var data, out var colorType);
 
         var bitmaps = new CTexture[sizeZ];
-        var offset = sizeX * sizeY * 4;
+        var bytesPerPixel = GetBytesPerPixel(colorType);
+        var offset = sizeX * sizeY * bytesPerPixel;
 
         fixed (byte* dataPtr = data)
         {
@@ -266,10 +268,16 @@ public static class TextureDecoder
             {
                 if (offset * (i + 1) > data.Length)
                     break;
-                bitmaps[i] = new CTexture(sizeX, sizeY, colorType, GetSliceData(dataPtr, sizeX, sizeY, 4, i).ToArray());
+                bitmaps[i] = new CTexture(sizeX, sizeY, colorType, GetSliceData(dataPtr, sizeX, sizeY, bytesPerPixel, i).ToArray());
             }
         }
         return bitmaps;
+    }
+    
+    private static int GetBytesPerPixel(EPixelFormat pixelFormat)
+    {
+        var tempFormatInfo = PixelFormatUtils.PixelFormats.ElementAtOrDefault((int) pixelFormat)!;
+        return tempFormatInfo.BlockBytes / (tempFormatInfo.BlockSizeX * tempFormatInfo.BlockSizeY * tempFormatInfo.BlockSizeZ);
     }
 
     private static void DecodeTexture(UTexture texture, FTexture2DMipMap? mip, int sizeX, int sizeY, int sizeZ, ETexturePlatform platform, out byte[] data, out EPixelFormat colorType)
