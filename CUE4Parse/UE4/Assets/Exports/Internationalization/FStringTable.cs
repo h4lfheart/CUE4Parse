@@ -19,7 +19,7 @@ public class FStringTable
         KeysToEntries = Ar.ReadMap(Ar.ReadFString, () =>
         {
             var value = Ar.ReadFString();
-            if (Ar.Game == EGame.GAME_MarvelRivals) Ar.Position += 4;
+            if (Ar.Game == EGame.GAME_MarvelRivals) Ar.SkipFString();
             if (Ar.Game == EGame.GAME_LostRecordsBloomAndRage)
             {
                 Ar.SkipFString();

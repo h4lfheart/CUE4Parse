@@ -22,7 +22,7 @@ namespace CUE4Parse.Example
             Log.Logger = new LoggerConfiguration().WriteTo.Console(theme: AnsiConsoleTheme.Literate).CreateLogger();
 
             OodleHelper.DownloadOodleDll();
-            OodleHelper.Initialize(OodleHelper.OODLE_DLL_NAME);
+            OodleHelper.Initialize(OodleHelper.OODLE_NAME_CURRENT);
             
             var provider = new DefaultFileProvider(@"C:\Users\Max\Games\Fortnite\Fortnite\FortniteGame\Content\Paks", SearchOption.AllDirectories, new VersionContainer(EGame.GAME_UE5_6), StringComparer.OrdinalIgnoreCase);
          

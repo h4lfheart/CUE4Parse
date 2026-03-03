@@ -103,7 +103,8 @@ public class FScriptStruct
             "PannerDetails" => new FPannerDetails(Ar),
             "GameplayTagContainer" => type == ReadType.ZERO ? new FGameplayTagContainer() : new FGameplayTagContainer(Ar),
             "IntPoint" or "Int32Point" => type == ReadType.ZERO ? new FIntPoint() : Ar.Read<FIntPoint>(),
-            "IntVector2" => type == ReadType.ZERO ? new TIntVector2<int>() : Ar.Read<TIntVector2<int>>(),
+            "Int64Point" or "UInt64Point" => type == ReadType.ZERO ? new TIntVector2<long>() : Ar.Read<TIntVector2<long>>(),
+            "IntVector2" or "Int32Vector2" => type == ReadType.ZERO ? new TIntVector2<int>() : Ar.Read<TIntVector2<int>>(),
             "UintVector2" or "Uint32Point" => type == ReadType.ZERO ? new TIntVector2<uint>() : Ar.Read<TIntVector2<uint>>(),
             "IntVector" => type == ReadType.ZERO ? new FIntVector() : Ar.Read<FIntVector>(),
             "UintVector" => type == ReadType.ZERO ? new TIntVector3<uint>() : Ar.Read<TIntVector3<uint>>(),
@@ -251,8 +252,8 @@ public class FScriptStruct
             // Metro:Awakening
             "VGCoverDataPoint" => new VGCoverDataPoint(Ar),
 
-            // Marvel Rivals
-            "MarvelSoftObjectPath" => new FMarvelSoftObjectPath(Ar),
+            "MarvelSoftObjectPath" when Ar.Game == EGame.GAME_MarvelRivals => new FMarvelSoftObjectPath(Ar),
+            "SerializablePropertySoftPath" when Ar.Game == EGame.GAME_MarvelRivals => new FSerializablePropertySoftPath(Ar),
 
             // Wuthering Waves
             "VectorDouble" => type == ReadType.ZERO ? new TIntVector3<double>() : Ar.Read<TIntVector3<double>>(),
@@ -354,6 +355,9 @@ public class FScriptStruct
 
             // Steel Hunters
             "ParamRegistryInfo" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+
+            // Windrose
+            "R5CollisionApproximation" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
 
             _ => Ar.Game switch
             {

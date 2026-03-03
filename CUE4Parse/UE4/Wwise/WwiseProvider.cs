@@ -10,6 +10,7 @@ using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.Wwise.Objects;
 using CUE4Parse.UE4.Wwise.Objects.HIRC;
+using CUE4Parse.UE4.Wwise.Objects.HIRC.Containers;
 using CUE4Parse.Utils;
 using Serilog;
 
@@ -24,7 +25,7 @@ public class WwiseExtractedSound
     public override string ToString() => OutputPath + "." + Extension.ToLowerInvariant();
 }
 
-public class WwiseProviderConfiguration(long maxTotalWwiseSize = 2L * 1024 * 1024 * 1024, int maxBankFiles = 1024)
+public class WwiseProviderConfiguration(long maxTotalWwiseSize = 4L * 1024 * 1024 * 1024, int maxBankFiles = 1024)
 {
     // Important note: If game splits audio event hierarchies across multiple soundbanks or audio events don't reference soundbanks to load (that happens in older Wwise versions) and either of these limits is reached, given game requires custom loading implementation!
     public long MaxTotalWwiseSize { get; } = maxTotalWwiseSize;
@@ -36,13 +37,13 @@ public class WwiseProviderConfiguration(long maxTotalWwiseSize = 2L * 1024 * 102
 
         return game switch
         {
-            EGame.GAME_AceCombat7 => new WwiseProviderConfiguration(long.MaxValue, baseConfig.MaxBankFiles),
+            EGame.GAME_Borderlands3 => new WwiseProviderConfiguration(long.MaxValue, int.MaxValue), // We need everything
             _ => baseConfig
         };
     }
 }
 
-public class WwiseProvider
+public partial class WwiseProvider
 {
     private readonly AbstractVfsFileProvider _provider;
     private readonly WwiseProviderConfiguration _configuration;
@@ -53,7 +54,7 @@ public class WwiseProvider
     private readonly Dictionary<uint, Hierarchy> _wwiseHierarchyTables = [];
     private readonly Dictionary<uint, List<Hierarchy>> _wwiseHierarchyDuplicates = [];
     private readonly Dictionary<string, byte[]> _wwiseEncodedMedia = [];
-    private readonly List<uint> _wwiseLoadedSoundBanks = [];
+    private readonly HashSet<uint> _wwiseLoadedSoundBanks = [];
     private readonly Dictionary<uint, WwiseReader> _multiReferenceLibraryCache = [];
     private bool _completedWwiseFullBnkInit = false;
     private bool _loadedMultiRefLibrary = false;
@@ -106,6 +107,49 @@ public class WwiseProvider
         }
 
         return results;
+    }
+
+    public List<WwiseExtractedSound> ExtractBankSounds(UAkAudioBank audioBank)
+    {
+        DetermineBaseWwiseAudioPath();
+
+        var soundBankCookedData = audioBank.SoundBankCookedData;
+
+        if (soundBankCookedData is null)
+        {
+            var soundBankId = audioBank.GetOrDefault<uint>("ShortID");
+
+            if (soundBankId is 0)
+                return [];
+
+            var soundBank = LoadSoundBankById(soundBankId, returnBank: true);
+
+            if (soundBank is null)
+                return [];
+
+            return ExtractBankSounds(soundBank);
+        }
+        else
+        {
+            var results = new List<WwiseExtractedSound>();
+            foreach (var eventName in soundBankCookedData.IncludedEventNames)
+            {
+                if (eventName.IsNone)
+                    continue;
+
+                var audioEventId = WwiseFnv.GetHash(eventName.Text);
+
+                foreach (var hierarchy in GetHierarchiesById(audioEventId))
+                {
+                    if (hierarchy.Data is HierarchyEvent hierarchyEvent)
+                    {
+                        LoopThroughEventActions(hierarchyEvent, results, _baseWwiseAudioPath, eventName.Text);
+                    }
+                }
+            }
+
+            return results;
+        }
     }
 
     public List<WwiseExtractedSound> ExtractAudioEventSounds(UAkAudioEvent audioEvent)
@@ -239,10 +283,10 @@ public class WwiseProvider
         }
     }
 
-    private void LoadSoundBankById(uint soundBankId)
+    private WwiseReader? LoadSoundBankById(uint soundBankId, bool returnBank = false)
     {
-        if (_wwiseLoadedSoundBanks.Contains(soundBankId))
-            return;
+        if (!returnBank && _wwiseLoadedSoundBanks.Contains(soundBankId))
+            return null;
 
         DetermineBaseWwiseAudioPath();
 
@@ -262,15 +306,20 @@ public class WwiseProvider
                     continue;
 
                 using var fullReader = file.Value.CreateReader();
-                var reader = new WwiseReader(fullReader);
-                CacheWwiseFile(reader);
+                var soundBank = new WwiseReader(fullReader);
+                CacheWwiseFile(soundBank);
                 _wwiseLoadedSoundBanks.Add(soundBankId);
+                return soundBank;
             }
             catch (Exception e)
             {
                 Log.Warning(e, $"Failed to read soundbank file '{file.Key}'");
             }
         }
+
+        Log.Warning("Soundbank with ID {ID} wasn't found", soundBankId);
+
+        return null;
     }
 
     private void LoopThroughEventActions(HierarchyEvent hierarchyEvent, List<WwiseExtractedSound> results, string ownerDirectory, string? debugName = null)
@@ -419,12 +468,12 @@ public class WwiseProvider
             .FirstOrDefault(v => v.HasValue);
 
         var files = _provider.Files.Values.ToList();
-        var soundBankName = eventData?.SoundBanks.FirstOrDefault().SoundBankPathName.ToString() ?? string.Empty;
+        var soundBankName = eventData?.SoundBanks.FirstOrDefault()?.SoundBankPathName.ToString() ?? string.Empty;
         var mediaPathName = eventData?.Media.FirstOrDefault().MediaPathName.Text ?? string.Empty;
 
         var targets = new[]
         {
-            eventData?.SoundBanks.FirstOrDefault().SoundBankPathName.ToString(),
+            eventData?.SoundBanks.FirstOrDefault()?.SoundBankPathName.ToString(),
             eventData?.Media.FirstOrDefault().MediaPathName.Text
         };
 
@@ -444,11 +493,14 @@ public class WwiseProvider
         }
     }
 
-    private void LoadExternalWwiseFiles()
+    private int LoadExternalWwiseFiles()
     {
         var searchDirectory = _gameDirectory;
         var dir = new DirectoryInfo(searchDirectory);
-        if (dir.Name.Equals("Paks", StringComparison.OrdinalIgnoreCase) && Directory.GetParent(searchDirectory) is { } parentInfo)
+        if (!dir.Name.Equals("Paks", StringComparison.OrdinalIgnoreCase))
+            return 0;
+
+        if (Directory.GetParent(searchDirectory) is { } parentInfo)
             searchDirectory = parentInfo.FullName;
 
         var wwiseDir = Directory.EnumerateDirectories(searchDirectory, "WwiseAudio", SearchOption.AllDirectories)
@@ -456,8 +508,8 @@ public class WwiseProvider
 
         if (wwiseDir is null)
         {
-            Log.Warning($"Wwise directory not found under {wwiseDir}");
-            return;
+            Log.Warning($"Wwise directory not found under '{wwiseDir}'");
+            return 0;
         }
 
         var wemFiles = Directory.GetFiles(wwiseDir, "*.wem", SearchOption.AllDirectories);
@@ -471,11 +523,14 @@ public class WwiseProvider
                 _looseWemFilesLookup[wemId] = new WwiseLocation(wem, InProvider: false);
         }
 
+        var loadedBanks = 0;
         foreach (var bnk in wwiseBankFiles)
         {
             var name = Path.GetFileNameWithoutExtension(bnk);
-            TryLoadAndCacheWwiseFile(bnk, name, 0, out var size, loadFromFileSystem: true, isWemFile: false);
+            if (TryLoadAndCacheWwiseFile(bnk, name, 0, out var size, loadFromFileSystem: true, isWemFile: false))
+                loadedBanks++;
         }
+        return loadedBanks;
     }
 
     private void BulkInitializeWwise()
@@ -483,10 +538,8 @@ public class WwiseProvider
         if (_completedWwiseFullBnkInit)
             return;
 
-        LoadExternalWwiseFiles();
-
         long totalLoadedSize = 0;
-        int totalLoadedBanks = 0;
+        int totalLoadedBanks = LoadExternalWwiseFiles();
 
         var wwiseFiles = _provider.Files.Values
             .Where(file => _validWwiseExtensions.Contains(file.Extension))
@@ -631,14 +684,19 @@ public class WwiseProvider
 
         _loadedMultiRefLibrary = true;
 
-        var assetFile = _provider.Files.Values.FirstOrDefault(f =>
-            f.Path.EndsWith("WwiseMultiReferenceAssetLibrary.uasset", StringComparison.OrdinalIgnoreCase));
+        var assetFiles = _provider.Files.Values.Where(f =>
+            f.Path.EndsWith("ReferenceAssetLibrary.uasset", StringComparison.OrdinalIgnoreCase));
 
-        if (assetFile == null)
+        foreach (var assetFile in assetFiles)
         {
-            Log.Warning("WwiseMultiReferenceAssetLibrary.uasset not found in provider");
-            return;
+            TryLoadMultiReferenceAsset(assetFile);
         }
+    }
+
+    private void TryLoadMultiReferenceAsset(FileProvider.Objects.GameFile? assetFile)
+    {
+        if (assetFile == null)
+            return;
 
         try
         {
@@ -650,7 +708,7 @@ public class WwiseProvider
 
             if (wwiseAssetLib == null)
             {
-                Log.Warning("No UWwiseAssetLibrary found in the package");
+                Log.Warning("No UWwiseAssetLibrary found in the package {0}", assetFile.Path);
                 return;
             }
 
@@ -666,12 +724,12 @@ public class WwiseProvider
                 }
             }
 
-            Log.Information("Loaded WwiseMultiReferenceAssetLibrary and cached {Count} packaged files",
+            Log.Information("Loaded {Name} and cached {Count} packaged files", assetFile.Name,
                 _multiReferenceLibraryCache.Count);
         }
         catch (Exception e)
         {
-            Log.Error(e, "Failed to load WwiseMultiReferenceAssetLibrary.uasset");
+            Log.Error(e, "Failed to load {Name}", assetFile.Name);
         }
     }
 

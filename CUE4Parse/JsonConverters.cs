@@ -825,6 +825,11 @@ public class UObjectConverter : JsonConverter<UObject>
     {
         writer.WriteStartObject();
         value.WriteJson(writer, serializer);
+        if (value.CustomGameData is not null)
+        {
+            writer.WritePropertyName(nameof(value.CustomGameData));
+            serializer.Serialize(writer, value.CustomGameData);
+        }
         writer.WriteEndObject();
     }
 
@@ -1341,6 +1346,12 @@ public class WwiseConverter : JsonConverter<WwiseReader>
         {
             writer.WritePropertyName(nameof(value.Platform));
             writer.WriteValue(value.Platform);
+        }
+
+        if (value.GlobalSettings is not null)
+        {
+            writer.WritePropertyName(nameof(value.GlobalSettings));
+            value.GlobalSettings.WriteJson(writer, serializer);
         }
 
         if (value.WemFile is { Length: > 0 })
@@ -2295,7 +2306,7 @@ public class FInstancedStructConverter : JsonConverter<FInstancedStruct>
 {
     public override void WriteJson(JsonWriter writer, FInstancedStruct? value, JsonSerializer serializer)
     {
-        if (value.StringData != null)
+        if (value?.StringData != null)
         {
             writer.WriteStartObject();
 
@@ -3059,7 +3070,7 @@ public class FWwiseLocalizedEventCookedDataConverter : JsonConverter<FWwiseLocal
     {
         writer.WriteStartObject();
 
-        writer.WritePropertyName("EventLanguageMap");
+        writer.WritePropertyName(nameof(value.EventLanguageMap));
         writer.WriteStartArray();
         foreach (var (language, data) in value.EventLanguageMap)
         {
@@ -3074,16 +3085,90 @@ public class FWwiseLocalizedEventCookedDataConverter : JsonConverter<FWwiseLocal
         }
         writer.WriteEndArray();
 
-        writer.WritePropertyName("DebugName");
+        writer.WritePropertyName(nameof(value.DebugName));
         serializer.Serialize(writer, value.DebugName);
 
-        writer.WritePropertyName("EventId");
+        writer.WritePropertyName(nameof(value.EventId));
         writer.WriteValue(value.EventId);
 
         writer.WriteEndObject();
     }
 
     public override FWwiseLocalizedEventCookedData ReadJson(JsonReader reader, Type objectType, FWwiseLocalizedEventCookedData existingValue, bool hasExistingValue,
+        JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class FWwiseLocalizedAuxBusCookedDataConverter : JsonConverter<FWwiseLocalizedAuxBusCookedData>
+{
+    public override void WriteJson(JsonWriter writer, FWwiseLocalizedAuxBusCookedData value, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+
+        writer.WritePropertyName(nameof(value.AuxBusLanguageMap));
+        writer.WriteStartArray();
+        foreach (var (language, data) in value.AuxBusLanguageMap)
+        {
+            writer.WriteStartObject();
+
+            writer.WritePropertyName("Key");
+            serializer.Serialize(writer, language);
+            writer.WritePropertyName("Value");
+            serializer.Serialize(writer, data);
+
+            writer.WriteEndObject();
+        }
+        writer.WriteEndArray();
+
+        writer.WritePropertyName(nameof(value.DebugName));
+        serializer.Serialize(writer, value.DebugName);
+
+        writer.WritePropertyName(nameof(value.AuxBusId));
+        writer.WriteValue(value.AuxBusId);
+
+        writer.WriteEndObject();
+    }
+
+    public override FWwiseLocalizedAuxBusCookedData ReadJson(JsonReader reader, Type objectType, FWwiseLocalizedAuxBusCookedData existingValue, bool hasExistingValue,
+        JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class FWwiseLocalizedShareSetCookedDataConverter : JsonConverter<FWwiseLocalizedShareSetCookedData>
+{
+    public override void WriteJson(JsonWriter writer, FWwiseLocalizedShareSetCookedData value, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+
+        writer.WritePropertyName(nameof(value.ShareSetLanguageMap));
+        writer.WriteStartArray();
+        foreach (var (language, data) in value.ShareSetLanguageMap)
+        {
+            writer.WriteStartObject();
+
+            writer.WritePropertyName("Key");
+            serializer.Serialize(writer, language);
+            writer.WritePropertyName("Value");
+            serializer.Serialize(writer, data);
+
+            writer.WriteEndObject();
+        }
+        writer.WriteEndArray();
+
+        writer.WritePropertyName(nameof(value.DebugName));
+        serializer.Serialize(writer, value.DebugName);
+
+        writer.WritePropertyName(nameof(value.ShareSetId));
+        writer.WriteValue(value.ShareSetId);
+
+        writer.WriteEndObject();
+    }
+
+    public override FWwiseLocalizedShareSetCookedData ReadJson(JsonReader reader, Type objectType, FWwiseLocalizedShareSetCookedData existingValue, bool hasExistingValue,
         JsonSerializer serializer)
     {
         throw new NotImplementedException();
@@ -3128,40 +3213,40 @@ public class FWwiseLocalizedSoundBankCookedDataConverter : JsonConverter<FWwiseL
         => throw new NotImplementedException("Deserialization not implemented");
 }
 
-public class BankHeaderConverter : JsonConverter<BankHeader>
+public class BankHeaderConverter : JsonConverter<AkBankHeader>
 {
-    public override void WriteJson(JsonWriter writer, BankHeader value, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, AkBankHeader value, JsonSerializer serializer)
     {
         writer.WriteStartObject();
 
-        writer.WritePropertyName("Version");
+        writer.WritePropertyName(nameof(value.Version));
         writer.WriteValue(value.Version);
 
-        writer.WritePropertyName("SoundBankId");
+        writer.WritePropertyName(nameof(value.SoundBankId));
         writer.WriteValue(value.SoundBankId);
 
-        writer.WritePropertyName("LanguageId");
+        writer.WritePropertyName(nameof(value.LanguageId));
         writer.WriteValue(value.LanguageId);
 
-        writer.WritePropertyName("FeedbackInBank");
+        writer.WritePropertyName(nameof(value.FeedbackInBank));
         writer.WriteValue(value.FeedbackInBank);
 
-        writer.WritePropertyName("AltValues");
+        writer.WritePropertyName(nameof(value.AltValues));
         writer.WriteValue(value.AltValues.ToString());
 
-        writer.WritePropertyName("ProjectId");
+        writer.WritePropertyName(nameof(value.ProjectId));
         writer.WriteValue(value.ProjectId);
 
-        writer.WritePropertyName("SoundBankType");
-        writer.WriteValue(value.SoundBankType);
+        writer.WritePropertyName(nameof(value.SoundBankType));
+        writer.WriteValue(value.SoundBankType.ToString());
 
-        writer.WritePropertyName("BankHash");
+        writer.WritePropertyName(nameof(value.BankHash));
         writer.WriteValue(value.BankHash);
 
         writer.WriteEndObject();
     }
 
-    public override BankHeader ReadJson(JsonReader reader, Type objectType, BankHeader existingValue, bool hasExistingValue, JsonSerializer serializer)
+    public override AkBankHeader ReadJson(JsonReader reader, Type objectType, AkBankHeader existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
         throw new NotImplementedException("Deserialization is not implemented.");
     }
@@ -3233,10 +3318,23 @@ public class FModConverter : JsonConverter<FModReader>
             serializer.Serialize(writer, FModReader.EncryptionKey);
         }
 
-        if (value.StringTable is not null)
+        if (value.StringTable?.RadixTree is { Guids: var guids } tree)
         {
             writer.WritePropertyName(nameof(value.StringTable));
-            serializer.Serialize(writer, value.StringTable);
+            var guidMap = new Dictionary<string, string>(guids.Length);
+            for (int i = 0; i < guids.Length; i++)
+            {
+                var guid = guids[i];
+                if (tree.TryGetStringByIndex(i, out var path))
+                {
+                    guidMap[guid.ToString()] = path;
+                }
+                else
+                {
+                    guidMap[guid.ToString()] = string.Empty;
+                }
+            }
+            serializer.Serialize(writer, guidMap);
         }
 
         if (value.SoundTable is not null)

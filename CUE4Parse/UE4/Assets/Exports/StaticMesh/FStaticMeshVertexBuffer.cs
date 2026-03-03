@@ -72,15 +72,10 @@ public class FStaticMeshVertexBuffer
                 itemSize = Ar.Read<int>();
                 itemCount = Ar.Read<int>();
                 position = Ar.Position;
-
-                // https://github.com/EpicGames/UnrealEngine/blob/f0033752c5d84fe622f8742052df86f54d814611/Engine/Source/Runtime/Engine/Private/Rendering/StaticMeshVertexBuffer.cpp#L15
-                var padding = NumVertices > 0 ? NumTexCoords % 2 : 0;
-                var texCoordNumVerts = NumVertices;
-                if (itemCount != texCoordNumVerts * NumTexCoords)
-                    texCoordNumVerts += padding;
+                var texCoordNumVerts = GetTexCoordNumVerts(itemCount);
                 
                 if (itemCount != texCoordNumVerts * NumTexCoords)
-                    throw new ParserException($"NumVertices={itemCount} != {NumVertices * NumTexCoords}");
+                    throw new ParserException($"NumVertices={itemCount} != {texCoordNumVerts * NumTexCoords}");
 
                 var uv = Ar.ReadArray(texCoordNumVerts, () => FStaticMeshUVItem.SerializeTexcoords(Ar, NumTexCoords, UseFullPrecisionUVs));
                 if (Ar.Position - position != itemCount * itemSize)
@@ -106,5 +101,14 @@ public class FStaticMeshVertexBuffer
         {
             UV = [];
         }
+    }
+
+    // From https://github.com/EpicGames/UnrealEngine/blob/1e1efba9e6050954594c0815d682b8b874a2e721/Engine/Source/Runtime/Engine/Private/Rendering/StaticMeshVertexBuffer.cpp#L21
+    private int GetTexCoordNumVerts(int itemCount)
+    {
+        if (itemCount == NumVertices * NumTexCoords) return NumVertices;
+        
+        var padding = NumVertices > 0 ? NumTexCoords % 2 : 0;
+        return NumVertices + padding;
     }
 }
