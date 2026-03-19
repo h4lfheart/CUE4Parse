@@ -130,9 +130,6 @@ public enum EGame : uint
 
     GAME_UE4_LATEST = GAME_UE4_28,
 
-    // TODO Figure out the enum name for UE5 Early Access
-    // The commit https://github.com/EpicGames/UnrealEngine/commit/cf116088ae6b65c1701eee99288e43c7310d6bb1#diff-6178e9d97c98e321fc3f53770109ea7f6a8ea7a86cac542717a81922f2f93613R723
-    // changed the IoStore and its packages format which breaks backward compatibility with 5.0.0-16433597+++UE5+Release-5.0-EarlyAccess
     GAME_UE5_0 = GameUtils.GameUe5Base + (0 << 16),
         GAME_MeetYourMaker = GAME_UE5_0 + 1,
         GAME_BlackMythWukong = GAME_UE5_0 + 2,
@@ -205,6 +202,7 @@ public enum EGame : uint
 
 public static class GameUtils
 {
+    public const int GameUe3Base = 0x3000000;
     public const int GameUe4Base = 0x4000000;
     public const int GameUe5Base = 0x5000000;
 
@@ -231,7 +229,7 @@ public static class GameUtils
                 < EGame.GAME_UE5_4 => new FPackageFileVersion(522, 1009),
                 < EGame.GAME_UE5_5 => new FPackageFileVersion(522, 1012),
                 < EGame.GAME_UE5_6 => new FPackageFileVersion(522, 1013),
-                < EGame.GAME_UE5_8 => new FPackageFileVersion(522, 1017),
+                < EGame.GAME_UE5_7 => new FPackageFileVersion(522, 1017),
                 _ => new FPackageFileVersion((int) EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION, (int) EUnrealEngineObjectUE5Version.AUTOMATIC_VERSION)
             };
         }
