@@ -36,6 +36,7 @@ using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.IO;
 using CUE4Parse.UE4.IO.Objects;
+using CUE4Parse.UE4.IO.OnDemand;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Pak;
 using CUE4Parse.UE4.Readers;
@@ -140,11 +141,9 @@ namespace CUE4Parse.FileProvider.Vfs
                         openContainerStreamFunc ??= it => new FStreamArchive(it, stream!, Versions);
                         reader = new IoStoreReader(archive, openContainerStreamFunc);
                         break;
-                    case "UONDEMANDTOC":
-                        if (OnDemandOptions is null)
-                            return;
-                        var chunkToc = new IoChunkToc(archive);
-                        RegisterVfs(chunkToc, OnDemandOptions);
+                    case "UONDEMANDTOC" when OnDemandOptions is not null:
+                        var onDemandToc = new FOnDemandTocReader(archive);
+                        RegisterVfs(onDemandToc);
                         return;
                     default:
                         return;
@@ -174,11 +173,9 @@ namespace CUE4Parse.FileProvider.Vfs
                         openContainerStreamFunc ??= _ => utocArchive!;
                         reader = new IoStoreReader(pakOrUtocArchive, openContainerStreamFunc);
                         break;
-                    case "UONDEMANDTOC":
-                        if (OnDemandOptions is null)
-                            return;
-                        var chunkToc = new IoChunkToc(pakOrUtocArchive);
-                        RegisterVfs(chunkToc, OnDemandOptions);
+                    case "UONDEMANDTOC" when OnDemandOptions is not null:
+                        var onDemandToc = new FOnDemandTocReader(pakOrUtocArchive);
+                        RegisterVfs(onDemandToc);
                         return;
                     default:
                         return;
@@ -206,11 +203,9 @@ namespace CUE4Parse.FileProvider.Vfs
                         openContainerStreamFunc ??= it => new FRandomAccessStreamArchive(it, utocStream!, Versions);
                         reader = new IoStoreReader(pakOrUtocArchive, openContainerStreamFunc);
                         break;
-                    case "UONDEMANDTOC":
-                        if (OnDemandOptions is null)
-                            return;
-                        var chunkToc = new IoChunkToc(pakOrUtocArchive);
-                        RegisterVfs(chunkToc, OnDemandOptions);
+                    case "UONDEMANDTOC" when OnDemandOptions is not null:
+                        var onDemandToc = new FOnDemandTocReader(pakOrUtocArchive);
+                        RegisterVfs(onDemandToc);
                         return;
                     default:
                         return;
@@ -223,19 +218,19 @@ namespace CUE4Parse.FileProvider.Vfs
             }
         }
 
-        public void RegisterVfs(IoChunkToc chunkToc, IoStoreOnDemandOptions options) => RegisterVfsAsync(chunkToc).GetAwaiter().GetResult();
-        public async Task RegisterVfsAsync(IoChunkToc chunkToc)
+        public void RegisterVfs(IOnDemandTocReader onDemandToc) => RegisterVfsAsync(onDemandToc).GetAwaiter().GetResult();
+        public async Task RegisterVfsAsync(IOnDemandTocReader onDemandToc)
         {
             if (OnDemandOptions is null)
                 return;
 
             var downloader = new IoStoreOnDemandDownloader(OnDemandOptions);
-            foreach (var container in chunkToc.Containers)
+            foreach (var container in onDemandToc.Containers)
             {
                 PostLoadReader(new IoStoreOnDemandReader(
-                    new FStreamArchive($"{container.ContainerName}.utoc",
-                    await downloader.Download($"{chunkToc.Header.ChunksDirectory}/{container.UTocHash.ToString().ToLower()}.utoc").ConfigureAwait(false), Versions),
-                    chunkToc,
+                    new FStreamArchive($"{container.Name}.uondemandtoc",
+                    await downloader.Download($"{onDemandToc.Header.ChunksDirectory}/{container.Hash.ToString().ToLower()}.utoc").ConfigureAwait(false), Versions),
+                    onDemandToc,
                     container,
                     downloader));
             }

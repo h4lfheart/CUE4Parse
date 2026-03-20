@@ -5,16 +5,16 @@ using FIoBlockHash = uint;
 
 namespace CUE4Parse.UE4.IO.Objects
 {
-    public class FOnDemandTocContainerEntry
+    public class FOnDemandTocContainerEntry : IOnDemandContainerEntry
     {
         public FIoContainerId ContainerId;
-        public readonly string ContainerName;
+        public string Name { get; }
         public readonly string EncryptionKeyGuid;
-        public readonly FOnDemandTocEntry[] Entries;
+        public IOnDemandTocEntry[] Entries { get; }
         public readonly uint[] BlockSizes;
         public readonly FIoBlockHash[] BlockHashes; // FIoBlockHash is just uint32
         public readonly byte[] Header;
-        public readonly FSHAHash UTocHash;
+        public FSHAHash Hash { get; }
         public readonly EOnDemandContainerFlags ContainerFlags;
 
         public FOnDemandTocContainerEntry(FArchive Ar, EOnDemandTocVersion version)
@@ -24,12 +24,12 @@ namespace CUE4Parse.UE4.IO.Objects
                 ContainerId = Ar.Read<FIoContainerId>();
             }
 
-            ContainerName = Ar.ReadFString();
+            Name = Ar.ReadFString();
             EncryptionKeyGuid = Ar.ReadFString();
             Entries = Ar.ReadArray(() => new FOnDemandTocEntry(Ar));
             BlockSizes = Ar.ReadArray<uint>();
             BlockHashes = Ar.ReadArray<FIoBlockHash>();
-            UTocHash = new FSHAHash(Ar);
+            Hash = new FSHAHash(Ar);
 
             if (version >= EOnDemandTocVersion.ContainerFlags)
             {

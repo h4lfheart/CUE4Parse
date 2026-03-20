@@ -10,11 +10,11 @@ using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.IO;
 
-public class IoChunkToc
+public class IoChunkToc : IOnDemandTocReader
 {
-    public readonly FOnDemandTocHeader Header;
+    public IOnDemandTocHeader Header { get; }
     public readonly FTocMeta Meta;
-    public readonly FOnDemandTocContainerEntry[] Containers;
+    public IOnDemandContainerEntry[] Containers { get; }
     public readonly FOnDemandTocAdditionalFile[] AdditionalFiles;
     public readonly FOnDemandTocTagSet[] TagSets;
 
@@ -22,17 +22,18 @@ public class IoChunkToc
     public IoChunkToc(FileInfo file) : this(new FByteArchive(file.FullName, File.ReadAllBytes(file.FullName))) { }
     public IoChunkToc(FArchive Ar)
     {
-        Header = new FOnDemandTocHeader(Ar);
+        var header = new FOnDemandTocHeader(Ar);
+        Header = header;
 
-        if (Header.Version >= EOnDemandTocVersion.Meta)
+        if (header.Version >= EOnDemandTocVersion.Meta)
             Meta = new FTocMeta(Ar);
 
-        Containers = Ar.ReadArray(() => new FOnDemandTocContainerEntry(Ar, Header.Version));
+        Containers = Ar.ReadArray(() => new FOnDemandTocContainerEntry(Ar, header.Version));
 
-        if (Header.Version >= EOnDemandTocVersion.AdditionalFiles)
+        if (header.Version >= EOnDemandTocVersion.AdditionalFiles)
             AdditionalFiles = Ar.ReadArray(() => new FOnDemandTocAdditionalFile(Ar));
 
-        if (Header.Version >= EOnDemandTocVersion.TagSets)
+        if (header.Version >= EOnDemandTocVersion.TagSets)
             TagSets = Ar.ReadArray(() => new FOnDemandTocTagSet(Ar));
     }
 }
