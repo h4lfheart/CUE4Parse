@@ -6,6 +6,7 @@ using System.Linq;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.IO;
+using CUE4Parse.UE4.IO.OnDemand;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 
@@ -104,8 +105,8 @@ namespace CUE4Parse.FileProvider
 
                 if (uproject is null && OnDemandOptions is not null && upperExt is "UONDEMANDTOC")
                 {
-                    var ioChunkTok = new IoChunkToc(file.FullName);
-                    RegisterVfs(ioChunkTok, OnDemandOptions);
+                    var onDemandToc = new FOnDemandTocReader(file.FullName);
+                    RegisterVfs(onDemandToc);
                     continue;
                 }
 

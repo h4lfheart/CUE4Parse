@@ -4,7 +4,7 @@ using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.IO.Objects;
 
-public class FOnDemandTocHeader
+public class FOnDemandTocHeader : IOnDemandTocHeader
 {
     public const ulong ExpectedMagic = 0x6f6e64656d616e64; // ondemand
 
@@ -13,7 +13,7 @@ public class FOnDemandTocHeader
     public readonly EOnDemandTocFlags Flags;
     public readonly uint BlockSize;
     public readonly string CompressionFormat;
-    public readonly string ChunksDirectory;
+    public string ChunksDirectory { get; }
     public string HostGroupName;
 
     public FOnDemandTocHeader(FArchive Ar)
