@@ -18,5 +18,13 @@ namespace CUE4Parse_Conversion.Meshes.PSK
             Tangent = tangent;
             UV = uv;
         }
+        
+        public CMeshVertex(FVector position, FVector4 normal, FVector4 tangent, FMeshUVFloat uv)
+        {
+            Position = position;
+            Normal = normal;
+            Tangent = tangent;
+            UV = uv;
+        }
     }
 }
