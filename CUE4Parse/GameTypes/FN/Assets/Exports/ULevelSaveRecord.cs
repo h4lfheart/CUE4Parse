@@ -62,6 +62,8 @@ namespace CUE4Parse.GameTypes.FN.Assets.Exports
         RefactoredSubobjectSerialization,
         RemoveInvalidEventBindings,
         AddRedirectForPackageName,
+        AddedCreationVkSemanticVersion,
+        Version42,
 
         VersionPlusOne,
         LatestVersion = VersionPlusOne - 1
@@ -561,6 +563,11 @@ namespace CUE4Parse.GameTypes.FN.Assets.Exports
             if (SaveVersion >= ELevelSaveRecordVersion.AddedNavmeshRequired)
             {
                 NavmeshRequired = Ar.Read<byte>();
+            }
+            
+            if (SaveVersion >= ELevelSaveRecordVersion.Version42)
+            {
+                Ar.Position += 4;
             }
         }
 
