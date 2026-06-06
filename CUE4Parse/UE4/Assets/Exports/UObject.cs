@@ -141,6 +141,8 @@ public class UObject : AbstractPropertyHolder
         {
             DeserializePropertiesTagged(Properties = [], Ar, false);
         }
+        
+        UPropertyCache.ApplyProperties(this, this);
 
         if (Ar.Game >= EGame.GAME_UE4_0 && !Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject) && Ar.ReadBoolean() && Ar.Position + 16 <= validPos)
         {
