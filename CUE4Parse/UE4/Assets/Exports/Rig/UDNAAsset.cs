@@ -18,6 +18,9 @@ public class UDNAAsset : UObject
     public Dictionary<string, IRawBase> Layers;
     public Lazy<byte[]>? DNAData;
     public string DnaFileName;
+    
+    public RawDefinition Definition => (RawDefinition) Layers["defn"];
+    public RawBehavior Behavior => (RawBehavior) Layers["bhvr"];
 
     private readonly byte[] _signature = "DNA"u8.ToArray();
     private readonly byte[] _eof = "AND"u8.ToArray();

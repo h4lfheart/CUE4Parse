@@ -164,7 +164,7 @@ public static class Exporter
         switch (texture)
         {
             case UTexture2DArray textureArray:
-                bitmaps = textureArray.DecodeTextureArray(platform);
+                bitmaps = textureArray.DecodeTextureArray(platform: platform);
                 break;
             case UTextureCube:
                 bitmaps[0] = bitmaps[0]?.ToPanorama();
