@@ -18,7 +18,7 @@ public abstract class TPerPlatformProperty<T> : IUStruct where T : notnull
     {
         bCooked = Ar.ReadBoolean();
         Default = getValue();
-        if (Ar is { Game: >= EGame.GAME_UE5_8, IsFilterEditorOnly: false } && !bCooked)
+        if (Ar is { Game: >= EGame.GAME_UE5_8 } || (Ar is { IsFilterEditorOnly: false } && !bCooked))
         {
             PerPlatform = Ar.ReadMap(Ar.ReadFName, getValue);
         }
