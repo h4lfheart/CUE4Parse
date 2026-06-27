@@ -10,6 +10,8 @@ public class FPartialAssetData
     public readonly FName AssetName;
     public readonly FName AssetClass;
 
+    public string ObjectPath => $"{PackageName}.{AssetName}";
+    
     public FPartialAssetData(FAssetRegistryArchive Ar)
     {
         if (Ar.Header.Version < FAssetRegistryVersionType.RemoveAssetPathFNames)
