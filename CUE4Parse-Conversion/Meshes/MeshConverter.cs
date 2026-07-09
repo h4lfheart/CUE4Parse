@@ -1,9 +1,5 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
 using CUE4Parse_Conversion.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
@@ -23,7 +19,6 @@ using SixLabors.ImageSharp.PixelFormats;
 using SkiaSharp;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.Assets.Exports.Nanite;
-using System.Threading;
 using Serilog;
 
 namespace CUE4Parse_Conversion.Meshes;
@@ -76,17 +71,19 @@ public static class MeshConverter
     {
         convertedMesh = new CStaticMesh();
         naniteLod = null;
-        if (originalMesh.RenderData?.Bounds == null || originalMesh.RenderData?.LODs is null)
+        var renderData = originalMesh.RenderData;
+        if (renderData == null || originalMesh.RenderData?.Bounds == null || originalMesh.RenderData?.LODs is null)
             return false;
 
-        convertedMesh.BoundingSphere = new FSphere(0f, 0f, 0f, originalMesh.RenderData.Bounds.SphereRadius / 2);
+        convertedMesh.BoundingSphere = new FSphere(0f, 0f, 0f, renderData.Bounds!.SphereRadius / 2);
         convertedMesh.BoundingBox = new FBox(
-            originalMesh.RenderData.Bounds.Origin - originalMesh.RenderData.Bounds.BoxExtent,
-            originalMesh.RenderData.Bounds.Origin + originalMesh.RenderData.Bounds.BoxExtent);
+            renderData.Bounds.Origin - renderData.Bounds.BoxExtent,
+            renderData.Bounds.Origin + renderData.Bounds.BoxExtent);
 
-        for (var i = 0; i < originalMesh.RenderData.LODs.Length; i++)
+        var lods = renderData.LODs!;
+        for (var i = 0; i < lods.Length; i++)
         {
-            var srcLod = originalMesh.RenderData.LODs[i];
+            var srcLod = lods[i];
             if (srcLod.SkipLod) continue;
 
             var numTexCoords = srcLod.VertexBuffer!.NumTexCoords;

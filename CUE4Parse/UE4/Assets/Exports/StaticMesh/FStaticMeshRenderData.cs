@@ -1,5 +1,3 @@
-using System;
-using System.Linq;
 using CUE4Parse.UE4.Assets.Exports.Nanite;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -129,7 +127,7 @@ public class FStaticMeshRenderData
             }
         }
 
-        if (Ar.Game == EGame.GAME_ArenaBreakoutInfinite)
+        if (Ar.Game is EGame.GAME_ArenaBreakoutInfinite)
         {
             var flags = new FStripDataFlags(Ar);
             if (Ar.ReadBoolean())

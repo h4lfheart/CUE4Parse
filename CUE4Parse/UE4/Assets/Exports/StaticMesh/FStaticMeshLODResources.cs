@@ -1,5 +1,3 @@
-using System;
-using System.Linq;
 using CUE4Parse.GameTypes.FF7.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -59,7 +57,7 @@ public class FStaticMeshLODResources
             MaxDeviation = Ar.Read<float>();
         }
 
-        if (Ar.Game == EGame.GAME_ThePathless) Ar.Position += 4;
+        if (Ar.Game is EGame.GAME_ThePathless or EGame.GAME_ARKSurvivalAscended) Ar.Position += 4;
         if (Ar.Game == EGame.GAME_NeedForSpeedMobile)
         {
             Ar.SkipFixedArray(36);
@@ -77,10 +75,14 @@ public class FStaticMeshLODResources
             return;
         }
 
+        if (Ar.Game is GAME_ArenaBreakoutMobile) Ar.SkipFixedArray(28);
+
         var bIsLODCookedOut = false;
         if (Ar.Game != EGame.GAME_Splitgate)
             bIsLODCookedOut = Ar.ReadBoolean();
         var bInlined = Ar.ReadBoolean() || Ar.Game == EGame.GAME_RogueCompany;
+
+        if (Ar.Game is EGame.GAME_LordOfMysteries) Ar.Position += 4;
 
         if (!stripDataFlags.IsAudioVisualDataStripped() && !bIsLODCookedOut)
         {
@@ -147,6 +149,7 @@ public class FStaticMeshLODResources
                 Ar.Position += Ar.Game switch
                 {
                     >= EGame.GAME_UE5_6 => 6 * 4, // RawDataHeader = 6x uint32
+                    GAME_ArenaBreakoutMobile => 44,
                     EGame.GAME_NeedForSpeedMobile => 32,
                     EGame.GAME_SuicideSquad => 29,
                     EGame.GAME_ArenaBreakoutInfinite => 16,
@@ -163,7 +166,16 @@ public class FStaticMeshLODResources
             // uint32 ReversedIBsSize       = 0;
             Ar.Position += 12;
 
-            if (Ar.Game is EGame.GAME_StarWarsJediSurvivor or EGame.GAME_TheFinals or EGame.GAME_ArcRaiders or EGame.GAME_NeedForSpeedMobile) Ar.Position += 4;
+            if (Ar.Game is EGame.GAME_StarWarsJediSurvivor or EGame.GAME_TheFinals or EGame.GAME_ArcRaiders) Ar.Position += 4;
+            if (Ar.Game is EGame.GAME_NeedForSpeedMobile)
+            {
+                var count = Ar.Read<int>();
+                for (var i = 0; i < count; i++)
+                {
+                    Ar.Position += 4;
+                    Ar.SkipMultipleFixedArrays(2, 4);
+                }
+            }
         }
     }
 
@@ -291,10 +303,14 @@ public class FStaticMeshLODResources
 
         if (Ar.Game == EGame.GAME_OutlastTrials) Ar.Position += 4;
 
-        if (Ar.Game == EGame.GAME_ArenaBreakoutInfinite)
+        if (Ar.Game is EGame.GAME_ArenaBreakoutInfinite)
         {
             _ = new FRawStaticIndexBuffer(Ar);
             _ = new FRawStaticIndexBuffer(Ar);
+        }
+        if (Ar.Game is GAME_ArenaBreakoutMobile)
+        {
+            Ar.SkipMultipleBulkArrayData(4);
         }
         if (Ar.Game is EGame.GAME_TheFinals or EGame.GAME_ArcRaiders)
         {

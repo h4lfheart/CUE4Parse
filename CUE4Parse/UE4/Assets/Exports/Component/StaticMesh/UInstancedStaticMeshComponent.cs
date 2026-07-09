@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -42,7 +41,7 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
             return;
         }
 
-        var bHasSkipSerializationPropertiesData = FFortniteMainBranchObjectVersion.Get(Ar) < FFortniteMainBranchObjectVersion.Type.ISMComponentEditableWhenInheritedSkipSerialization || Ar.ReadBoolean();
+        var bHasSkipSerializationPropertiesData = Ar.Ver >= EUnrealEngineObjectUE3Version.BULKSERIALIZE_INSTANCE_DATA && FFortniteMainBranchObjectVersion.Get(Ar) < FFortniteMainBranchObjectVersion.Type.ISMComponentEditableWhenInheritedSkipSerialization || Ar.ReadBoolean();
         if (Ar.Game is EGame.GAME_HonorofKingsWorld)
         {
             CustomGameData = Ar.ReadBoolean();
@@ -118,6 +117,20 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
             MotoGP24Data = data.ToArray();
         }
         if (Ar.Game == EGame.GAME_SuicideSquad) Ar.SkipBulkArrayData();
+        if (Ar.Game is EGame.GAME_LordOfMysteries)
+        {
+            Ar.SkipBulkArrayData();
+            Ar.Position += Ar.Read<long>() + 4;
+
+            if (Ar.ReadBoolean())
+            {
+                Ar.SkipBulkArrayData();
+                Ar.Position += 4;
+                Ar.Position += Ar.Read<int>() * 4;
+                Ar.Position += 4;
+            }    
+            return;
+        }
 
         if (bCooked && (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.SerializeInstancedStaticMeshRenderData ||
                         FEditorObjectVersion.Get(Ar) >= FEditorObjectVersion.Type.SerializeInstancedStaticMeshRenderData))
@@ -133,6 +146,7 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
             }
 
             if (Ar.Game is EGame.GAME_AssaultFireFuture) Ar.SkipBulkArrayData();
+            if (Ar.Game is EGame.GAME_NeedForSpeedMobile) Ar.SkipMultipleBulkArrayData(2);
 
             var renderDataSizeBytes = Ar.Read<ulong>();
             Ar.Position += (long) renderDataSizeBytes;
