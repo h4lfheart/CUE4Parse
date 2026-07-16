@@ -276,7 +276,7 @@ public static class TextureDecoder
     
     private static int GetBytesPerPixel(EPixelFormat pixelFormat)
     {
-        var tempFormatInfo = PixelFormatUtils.PixelFormats.ElementAtOrDefault((int) pixelFormat)!;
+        var tempFormatInfo = PixelFormatUtils.PixelFormats.ElementAtOrDefault((int) pixelFormat)!.Value;
         return tempFormatInfo.BlockBytes / (tempFormatInfo.BlockSizeX * tempFormatInfo.BlockSizeY * tempFormatInfo.BlockSizeZ);
     }
 
