@@ -256,7 +256,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 SerialOffset = Ar.Read<long>();
             }
 
-            if (Ar.Game >= EGame.GAME_UE4_0)
+            if (Ar.Game >= GAME_UE4_0)
             {
                 ForcedExport = Ar.ReadBoolean();
                 NotForClient = Ar.ReadBoolean();
@@ -364,12 +364,12 @@ namespace CUE4Parse.UE4.Objects.UObject
             OuterIndex = new FPackageIndex(Ar);
             ObjectName = Ar.ReadFName();
 
-            if (Ar.Ver >= EUnrealEngineObjectUE4Version.NON_OUTER_PACKAGE_IMPORT && !Ar.IsFilterEditorOnly)
+            if (Ar.Game >=  GAME_UE5_8 || Ar.Ver >= EUnrealEngineObjectUE4Version.NON_OUTER_PACKAGE_IMPORT && !Ar.IsFilterEditorOnly)
             {
                 PackageName = Ar.ReadFName();
             }
 
-            if (Ar.Game == EGame.GAME_RacingMaster) Ar.Position += 1;
+            if (Ar.Game == GAME_RacingMaster) Ar.Position += 1;
 
             ImportOptional = Ar.Ver >= EUnrealEngineObjectUE5Version.OPTIONAL_RESOURCES && Ar.ReadBoolean();
         }

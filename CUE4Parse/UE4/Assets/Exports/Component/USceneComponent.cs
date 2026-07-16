@@ -37,7 +37,8 @@ public class USceneComponent : UActorComponent
         RelativeRotation = GetOrDefault(nameof(RelativeRotation), FRotator.ZeroRotator);
         RelativeScale3D = GetOrDefault(nameof(RelativeScale3D), FVector.OneVector);
         
-        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 4;
+        if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 4;
+        
         var bComputeBoundsOnceForGame = GetOrDefault<bool>("bComputeBoundsOnceForGame");
         var bComputedBoundsOnceForGame = GetOrDefault<bool>("bComputedBoundsOnceForGame");
         var bComputeBounds = bComputeBoundsOnceForGame || bComputedBoundsOnceForGame;

@@ -141,7 +141,7 @@ public class UObject : AbstractPropertyHolder
         
         UPropertyCache.ApplyProperties(this, this);
 
-        if (Ar.Game >= EGame.GAME_UE4_0 && !Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject))
+        if (Ar.Game >= GAME_UE4_0 && !Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject))
         {
             var hasGuid = Ar.ReadBoolean();
 
