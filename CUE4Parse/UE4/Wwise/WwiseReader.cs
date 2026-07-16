@@ -8,7 +8,6 @@ using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Objects;
 using CUE4Parse.UE4.Wwise.Objects.HIRC;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Wwise;
 
@@ -22,6 +21,7 @@ public sealed record WwiseBulkDataSource(FAssetArchive AssetAr, FByteBulkData bu
 [JsonConverter(typeof(WwiseConverter))]
 public class WwiseReader
 {
+    
     public string Path;
     private readonly WwiseDataSource? _source;
 

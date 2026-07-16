@@ -6,12 +6,12 @@ using CUE4Parse.Compression;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
-using Serilog;
 
 namespace CUE4Parse.FileProvider.Objects;
 
 public abstract class GameFile
 {
+    
     public static readonly string[] UePackageExtensions = ["uasset", "umap"];
     public static readonly string[] UePackagePayloadExtensions = ["uexp", "ubulk", "uptnl"];
     public static readonly string[] UeKnownExtensions =

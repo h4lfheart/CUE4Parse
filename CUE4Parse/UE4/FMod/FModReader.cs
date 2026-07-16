@@ -10,13 +10,13 @@ using CUE4Parse.UE4.FMod.Objects;
 using CUE4Parse.UE4.FMod.Utils;
 using Fmod5Sharp.FmodTypes;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.FMod;
 
 [JsonConverter(typeof(FModConverter))]
 public class FModReader
 {
+    
     public readonly string BankName;
     public static int Version => FormatInfo.FileVersion;
     public static FFormatInfo FormatInfo;

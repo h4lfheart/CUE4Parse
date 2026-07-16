@@ -6,7 +6,6 @@ using CUE4Parse.GameTypes.Tencent.ValorantSource.Encryption.Aes;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
-using Serilog;
 
 namespace CUE4Parse.UE4.Pak.Objects;
 
@@ -34,6 +33,7 @@ public enum EPakFileVersion
 
 public partial class FPakInfo
 {
+    
     public const uint PAK_FILE_MAGIC = 0x5A6F12E1;
     public const uint PAK_FILE_MAGIC_OutlastTrials = 0xA590ED1E;
     public const uint PAK_FILE_MAGIC_TorchlightInfinite = 0x6B2A56B8;

@@ -10,7 +10,6 @@ using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.GameTypes.AoC.Objects;
 
@@ -27,6 +26,7 @@ public struct FAoCDataChunk
 [JsonConverter(typeof(FAoCDBCReaderConverter))]
 public sealed class FAoCDBCReader : FAssetArchive
 {
+    
     private Dictionary<int, string> NameMap = [];
     public FAoCDataChunk[] Chunks = [];
 

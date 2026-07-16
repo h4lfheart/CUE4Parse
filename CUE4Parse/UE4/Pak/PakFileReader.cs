@@ -35,6 +35,7 @@ namespace CUE4Parse.UE4.Pak;
 
 public partial class PakFileReader : AbstractAesVfsReader
 {
+
     public readonly FArchive Ar;
     public readonly FPakInfo Info;
 

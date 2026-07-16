@@ -1,13 +1,13 @@
 using Fmod5Sharp;
 using Fmod5Sharp.FmodTypes;
 using Fmod5Sharp.Util;
-using Serilog;
 using SubstreamSharp;
 
 namespace CUE4Parse.UE4.FMod.Nodes;
 
 public class SoundDataNode
 {
+    
     public readonly FmodSoundBank? SoundBank;
 
     public SoundDataNode(BinaryReader Ar, long nodeStart, uint size, int soundDataIndex)

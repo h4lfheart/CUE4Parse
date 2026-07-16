@@ -1,10 +1,10 @@
 using CUE4Parse.UE4.FMod.Enums;
-using Serilog;
 
 namespace CUE4Parse.UE4.FMod.Metadata;
 
 public readonly struct FFormatInfo
 {
+    
     public readonly int FileVersion;
     public readonly int CompatVersion;
 

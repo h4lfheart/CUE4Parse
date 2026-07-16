@@ -2,7 +2,6 @@ using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Texture;
 
@@ -33,6 +32,7 @@ public class FOodleTexture2DMipMap : FTexture2DMipMap
 
 public class UOodleTextureStorageProviderFactory : UTextureAllMipDataProviderFactory
 {
+
     public EPixelFormat Format { get; protected set; } = EPixelFormat.PF_Unknown;
     public FOodleTexture2DMipMap[] Mips { get; private set; } = [];
     public FPackageIndex Texture { get; private set; }

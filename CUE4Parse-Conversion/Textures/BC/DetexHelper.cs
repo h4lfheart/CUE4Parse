@@ -1,12 +1,12 @@
-﻿using System.Reflection;
+using System.Reflection;
 using System.Resources;
 using System.Runtime.CompilerServices;
-using Serilog;
 
 namespace CUE4Parse_Conversion.Textures.BC;
 
 public static class DetexHelper
 {
+    
     private const string MANIFEST_URL = "CUE4Parse_Conversion.Resources.Detex.dll";
     public const string DLL_NAME = "Detex.dll";
 

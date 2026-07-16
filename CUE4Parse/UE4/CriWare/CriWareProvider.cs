@@ -6,7 +6,6 @@ using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.CriWare.Decoders;
 using CUE4Parse.UE4.CriWare.Readers;
 using CUE4Parse.UE4.Objects.UObject;
-using Serilog;
 using UE4Config.Parsing;
 
 namespace CUE4Parse.UE4.CriWare;
@@ -36,6 +35,7 @@ public class CriWareExtractedSound
 /// </summary>
 public class CriWareProvider
 {
+    
     private readonly record struct AwbLocation(string Path, bool InProvider);
     private Dictionary<string, AwbLocation> _streamingAwbLookup = [];
 

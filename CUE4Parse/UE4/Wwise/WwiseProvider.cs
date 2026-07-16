@@ -9,7 +9,6 @@ using CUE4Parse.UE4.Wwise.Objects.Actions;
 using CUE4Parse.UE4.Wwise.Objects.HIRC;
 using CUE4Parse.UE4.Wwise.Objects.HIRC.Containers;
 using CUE4Parse.Utils;
-using Serilog;
 
 namespace CUE4Parse.UE4.Wwise;
 
@@ -25,6 +24,7 @@ public class WwiseExtractedSound
 
 public partial class WwiseProvider
 {
+    
     private readonly AbstractVfsFileProvider _provider;
     private readonly string _gameDirectory;
     private string _baseWwiseAudioPath;

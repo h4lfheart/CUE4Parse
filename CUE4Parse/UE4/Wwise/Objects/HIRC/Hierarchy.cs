@@ -2,13 +2,13 @@ using System.Diagnostics;
 using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Objects.HIRC.Containers;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
 [JsonConverter(typeof(HierarchyConverter))]
 public readonly struct Hierarchy
 {
+    
     public readonly EAKBKHircType Type;
     public readonly uint Length;
     public readonly AbstractHierarchy Data;

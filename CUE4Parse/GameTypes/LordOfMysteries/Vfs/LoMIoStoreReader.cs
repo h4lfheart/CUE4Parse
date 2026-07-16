@@ -10,6 +10,7 @@ namespace CUE4Parse.GameTypes.LordOfMysteries.Vfs;
 
 public sealed class LoMIoStoreReader(LoMIoStoreManifest manifest, LoMDirectoryIndex directoryIndex, VersionContainer versions) : IoStoreReader(manifest.TocArchive, path => new FRandomAccessFileStreamArchive(path, versions))
 {
+
     private readonly LoMDirectoryIndex _directoryIndex = directoryIndex;
 
     public override bool HasDirectoryIndex => true;

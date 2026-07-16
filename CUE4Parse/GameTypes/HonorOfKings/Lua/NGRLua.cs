@@ -3,7 +3,6 @@ using CUE4Parse.UE4.Lua.Archives;
 using CUE4Parse.UE4.Lua.Readers;
 using CUE4Parse.UE4.Lua.Writers;
 using CUE4Parse.UE4.Versions;
-using Serilog;
 
 namespace CUE4Parse.GameTypes.HonorOfKings.Lua;
 
@@ -44,6 +43,7 @@ public readonly struct Chunk(FNGRLuaArchive Ar, int chunkSize)
 
 public class NGRLuaReader
 {
+    
     private const uint NGR_LUA_MAGIC = 0xFADEFACE;
 
     public FadeFaceHeader Header;
