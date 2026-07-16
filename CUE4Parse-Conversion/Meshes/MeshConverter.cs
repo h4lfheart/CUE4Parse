@@ -19,7 +19,6 @@ using SixLabors.ImageSharp.PixelFormats;
 using SkiaSharp;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.Assets.Exports.Nanite;
-using Serilog;
 
 namespace CUE4Parse_Conversion.Meshes;
 

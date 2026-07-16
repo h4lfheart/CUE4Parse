@@ -4,7 +4,6 @@ using System.Linq;
 using CUE4Parse_Conversion.PoseAsset.Conversion;
 using CUE4Parse.UE4.Assets.Exports.Rig;
 using CUE4Parse.UE4.Objects.Core.Math;
-using Serilog;
 
 namespace CUE4Parse_Conversion.DNA;
 
