@@ -43,7 +43,7 @@ namespace CUE4Parse.UE4.Assets.Utils
     {
         public override void Map(IPropertyHolder src, object dst)
         {
-            // TODO
+            UPropertyCache.ApplyProperties(src, dst);
         }
     }
 }
