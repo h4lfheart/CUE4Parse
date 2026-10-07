@@ -7,6 +7,7 @@ using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
 
@@ -159,14 +160,14 @@ public class FActorTemplateRecord
         ActorDataHardReferences = fallback.GetOrDefault<bool[]>(nameof(ActorDataHardReferences));
     }
 
-    public FStructFallback ReadActorData(IPackage owner, ELevelSaveRecordVersion SaveVersion)
+    public FStructFallback ReadActorData(IPackage owner, ELevelSaveRecordVersion SaveVersion, VersionContainer versions)
     {
         if (ActorData is null)
             return new FStructFallback();
 
         try
         {
-            using var Ar = new FAssetArchive(new FByteArchive("ActorData Reader", ActorData), owner);
+            using var Ar = new FAssetArchive(new FByteArchive("ActorData Reader", ActorData, versions), owner);
             var flags = owner.Summary.PackageFlags;
             owner.Summary.PackageFlags &= ~EPackageFlags.PKG_UnversionedProperties;
             var props = bUsingRecordDataReferenceTable
@@ -184,29 +185,20 @@ public class FActorTemplateRecord
     private FStructFallback ReadReferenceTableActorData(FAssetArchive Ar)
     {
         var magic = Ar.Read<uint>(); // E9 9D 18 A2
-        Ar.Position += sizeof(ushort); // file version?
-        Ar.Position += sizeof(ushort); // reserved
-        Ar.Position += sizeof(uint); // some sort of data count?
-
-        var unrealVersionMajor = Ar.Read<ushort>();
-        var unrealVersionMinor = Ar.Read<ushort>();
-
-        Ar.Position += 6; // unsure
-
-        var fortniteVersionString = Ar.ReadFString();
-
-        Ar.Position += sizeof(uint); // padding, 0xFFFFFFFF
-
-        Ar.Position += sizeof(ushort); // 01 03
+        var fileVersionUE4 = Ar.Read<EUnrealEngineObjectUE4Version>();
+        var fileVersionUE5 = Ar.Read<EUnrealEngineObjectUE5Version>();
+        var engineVersion = new FEngineVersion(Ar);
         
-        var guidTable = Ar.ReadArray<(FGuid, int)>(() =>
-        {
-            var guid = Ar.Read<FGuid>();
-            var guidData = Ar.Read<int>();
-            return (guid, guidData);
-        });
-        
-        return new FStructFallback(Ar);
+        Ar.Position += sizeof(int); // -1
+        Ar.Position += 2; // 01 03
+
+        var guidPairCount =  Ar.Read<uint>();
+        Ar.Position += guidPairCount * (FGuid.Size + sizeof(uint));
+
+        var structFallback = new FStructFallback();
+        UObject.DeserializePropertiesTagged(structFallback.Properties, Ar, false);
+
+        return structFallback;
     }
 }
 
@@ -405,7 +397,7 @@ public class ULevelSaveRecord : UObject
             foreach (var kvp in TemplateRecords)
             {
                 if (kvp.Value is null) continue;
-                ActorData.Add(kvp.Value.ReadActorData(Owner, SaveVersion));
+                ActorData.Add(kvp.Value.ReadActorData(Owner, SaveVersion, Ar.Versions));
             }
 
         }
