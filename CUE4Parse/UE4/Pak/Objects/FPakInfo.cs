@@ -1,4 +1,5 @@
 using System.Buffers.Binary;
+using System.Numerics;
 using CUE4Parse.Compression;
 using CUE4Parse.GameTypes.ABI.Encryption.SM4;
 using CUE4Parse.GameTypes.Tencent.PUBGMobile.Encryption.RSA;
@@ -204,16 +205,16 @@ public partial class FPakInfo
             }
         }
 
-        if (Ar.Game == GAME_ArenaBreakoutInfinite)
+        if (Ar.Game is GAME_ArenaBreakoutInfinite)
         {
             EncryptionKeyGuid = Ar.Read<FGuid>();
+            Version = Ar.Read<EPakFileVersion>();
             Magic = Ar.Read<uint>();
             if (Magic != PAK_FILE_MAGIC_ArenaBreakoutInfinite) return;
             EncryptedIndex = Ar.Read<byte>() != 0;
-            IndexSize = Ar.Read<long>();
-            IndexOffset = Ar.Read<long>();
-            IndexHash = new FSHAHash(Ar);
-            Version = Ar.Read<EPakFileVersion>();
+            IndexHash = ABIDecryption.DecodeIndexHash(Ar.ReadBytes(FSHAHash.SIZE));
+            IndexOffset = ABIDecryption.DecodeIndexInfo(Ar.Read<ulong>(), 0xD3A512UL);
+            IndexSize = ABIDecryption.DecodeIndexInfo(Ar.Read<ulong>(), 0xB640093CUL);
             goto beforeCompression;
         }
 
@@ -337,13 +338,13 @@ public partial class FPakInfo
             var valorantRsaKeyOffset = Ar.Read<long>();
             Ar.Position += EncryptionKeyGuid.A % 5 + 1;
             Ar.Read<long>();
-            var maskedIndexOffset = Ar.Read<ulong>();
+            var maskedIndexInfoA = Ar.Read<ulong>();
             Ar.Position += EncryptionKeyGuid.B % 5 + 1;
             var valorantRsaKeySize = checked((int) Ar.Read<long>());
             Ar.Read<long>();
             Ar.Position += EncryptionKeyGuid.C % 5 + 1;
             Ar.Read<long>();
-            var maskedIndexSize = Ar.Read<ulong>();
+            var maskedIndexInfoB = Ar.Read<ulong>();
 
             CustomEncryptionData = new byte[sizeof(long) + sizeof(int)];
             BinaryPrimitives.WriteInt64LittleEndian(CustomEncryptionData.AsSpan(0, sizeof(long)), valorantRsaKeyOffset);
@@ -351,8 +352,8 @@ public partial class FPakInfo
 
             const ulong offsetMask = ValorantSourceAes.LOW_NIBBLES_MASK;
             const ulong sizeMask = ValorantSourceAes.HIGH_NIBBLES_MASK;
-            IndexOffset = (long) ((maskedIndexSize & offsetMask) | (maskedIndexOffset & ~offsetMask));
-            IndexSize = (long) ((maskedIndexSize & sizeMask) | (maskedIndexOffset & ~sizeMask));
+            IndexOffset = (long) ((maskedIndexInfoB & offsetMask) | (maskedIndexInfoA & ~offsetMask));
+            IndexSize = (long) ((maskedIndexInfoB & sizeMask) | (maskedIndexInfoA & ~sizeMask));
             IndexHash = new FSHAHash(Ar);
 
             // I'm not reading footer exactly rigth so hardcoded offset for compression names
@@ -428,7 +429,7 @@ public partial class FPakInfo
         if (Ar.Game == GAME_Farlight84) Ar.Position += 8; // unknown long
         if (Ar.Game == GAME_Snowbreak) IndexOffset ^= 0x1C1D1E1F;
         if (Ar.Game == GAME_KartRiderDrift) IndexOffset ^= 0x3009EB;
-        if (Ar.Game is GAME_NevernessToEverness or GAME_NevernessToEverness_CBT2) IndexOffset -= 1;
+        if (Ar.Game is GAME_NevernessToEverness) IndexOffset -= 1;
         IndexSize = Ar.Read<long>();
         IndexHash = new FSHAHash(Ar);
 
@@ -534,6 +535,11 @@ public partial class FPakInfo
             }
         }
 
+        if (Ar.Game == GAME_RocoKingdomWorld)
+        {
+            CustomEncryptionData = offsetToTry != OffsetsToTry.Size8a ? Ar.ReadBytes(1) : [0];
+        }
+
         // Written at the tail so the trailer for older versions remains byte-compatible. Paks authored before
         // this version leave PakchunkIndex at INDEX_NONE, and the reader falls back to deriving it from the filename.
         if (Version >= EPakFileVersion.PakFile_Version_PakchunkIndex && Ar.Game >= GAME_UE6_0)
@@ -583,17 +589,19 @@ public partial class FPakInfo
         // ------- CUSTOM (order should not matter) -------
         SizeRacingMaster = Size8 + 4, // additional int
         SizeFTT = Size + 4, // additional int for extra magic
-        SizeHotta = Size8a + 4, // additional int for custom pak version
+        SizeGangstar = Size8a, // Just so decryption is aligned with the key
         SizeARKSurvivalAscended = Size8a + 8, // additional 8 bytes
         SizeFarlight = Size8a + 9, // additional long and byte
         SizeDreamStar = Size8a + 10,
         SizeRennsport = Size8a + 16,
         SizeQQ = Size8a + 26,
         SizeDbD = Size8a + 32, // additional 28 bytes for encryption key and 4 bytes for unknown uint
+        SizeBack4Blood = Size9,
+        SizeRocoKingdomWorld = Size9, // extra strategy id byte
+        SizeHotta = Size9a, // additional int for custom pak version
 
         SizePUBG = 45, // Game For Peace (Chinese PUBG Mobile), PUBG Mobile, PUBG Lite, PUBG India
         SizeOverhit = 53,
-        SizeBack4Blood = 222,
         SizeArenaBreakoutMobile = 205,
         SizeDuneAwakening = 261,
         SizeValorantSource = 286, // For older versions it was 282
@@ -626,6 +634,7 @@ public partial class FPakInfo
                 GAME_KartRiderDrift => (long) OffsetsToTry.SizeKartRiderDrift,
                 GAME_ArenaBreakoutMobile => (long) OffsetsToTry.SizeArenaBreakoutMobile,
                 GAME_ValorantSource => (long) OffsetsToTry.SizeValorantSource,
+                GAME_GangstarMirageCity => (long) OffsetsToTry.SizeGangstar,
                 _ => Math.Min(length, (long) OffsetsToTry.SizeMax),
             };
 
@@ -639,12 +648,14 @@ public partial class FPakInfo
                     DecryptInZOIFPakInfo(Ar, maxOffset, buffer);
                     break;
                 case GAME_ValorantSource:
-                    DecryptValorantSourcePakInfo(Ar, maxOffset, buffer);
+                    DecryptValorantSourceFPakInfo(maxOffset, buffer);
+                    break;
+                case GAME_GangstarMirageCity:
+                    DecryptGangstarFPakInfo(maxOffset, buffer);
                     break;
             }
 
             using var reader = new FPointerArchive(Ar.Name, buffer, maxOffset, Ar.Versions);
-
             var offsetsToTry = Ar.Game switch
             {
                 GAME_TowerOfFantasy or GAME_MeetYourMaker or GAME_TorchlightInfinite or GAME_EtheriaRestart => [OffsetsToTry.SizeHotta],
@@ -663,6 +674,8 @@ public partial class FPakInfo
                 GAME_ArenaBreakoutMobile => [OffsetsToTry.SizeArenaBreakoutMobile, OffsetsToTry.Size8a],
                 GAME_ValorantSource => [OffsetsToTry.SizeValorantSource],
                 GAME_Overhit => [OffsetsToTry.SizeOverhit],
+                GAME_GangstarMirageCity => [OffsetsToTry.SizeGangstar],
+                GAME_RocoKingdomWorld => [OffsetsToTry.SizeRocoKingdomWorld, OffsetsToTry.Size8a],
                 _ => _offsetsToTry
             };
 

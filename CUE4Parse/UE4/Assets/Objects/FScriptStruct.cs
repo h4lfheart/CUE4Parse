@@ -15,7 +15,7 @@ using CUE4Parse.GameTypes.NMZ.Assets;
 using CUE4Parse.GameTypes.OtherGames.Objects;
 using CUE4Parse.GameTypes.OuterWorlds2.Objects;
 using CUE4Parse.GameTypes.PUBG.Assets.Objects;
-using CUE4Parse.GameTypes.RocoKingdomWorld.Assets.Objects;
+using CUE4Parse.GameTypes.Tencent.RocoKingdomWorld.Assets.Objects;
 using CUE4Parse.GameTypes.SG2.Objects;
 using CUE4Parse.GameTypes.SMG.UE4.Assets.Objects;
 using CUE4Parse.GameTypes.SOD2.Assets.Objects;
@@ -25,6 +25,7 @@ using CUE4Parse.GameTypes.TL.Objects;
 using CUE4Parse.GameTypes.TQ2.Objects;
 using CUE4Parse.GameTypes.TSW.Objects;
 using CUE4Parse.UE4.Assets.Exports.Animation;
+using CUE4Parse.UE4.Assets.Exports.ChaosClothAsset;
 using CUE4Parse.UE4.Assets.Exports.Engine.Font;
 using CUE4Parse.UE4.Assets.Exports.Harmonix;
 using CUE4Parse.UE4.Assets.Exports.Material;
@@ -33,6 +34,7 @@ using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
 using CUE4Parse.UE4.Objects.ChaosCaching;
 using CUE4Parse.UE4.Objects.ControlRig;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -66,7 +68,6 @@ namespace CUE4Parse.UE4.Assets.Objects;
 [JsonConverter(typeof(FScriptStructConverter))]
 public class FScriptStruct
 {
-
     public readonly IUStruct StructType;
 
     public FScriptStruct(FAssetArchive Ar, string? structName, UStruct? struc, ReadType? type)
@@ -86,7 +87,7 @@ public class FScriptStruct
             "DateTime" => type == ReadType.ZERO ? new FDateTime() : Ar.Read<FDateTime>(),
             "ExpressionInput" => type == ReadType.ZERO ? new FExpressionInput() : new FExpressionInput(Ar),
             "FrameNumber" => type == ReadType.ZERO ? new FFrameNumber() : Ar.Read<FFrameNumber>(),
-            "Guid" => type == ReadType.ZERO ? new FGuid() : Ar.Read<FGuid>(),
+            "Guid" or "GUID" => type == ReadType.ZERO ? new FGuid() : Ar.Read<FGuid>(),
             "NavAgentSelector" => type == ReadType.ZERO ? new FNavAgentSelector() : Ar.Read<FNavAgentSelector>(),
             "SmartName" => type == ReadType.ZERO ? new FSmartName() : new FSmartName(Ar),
             "NameCurveKey" => type == ReadType.ZERO ? new FNameCurveKey() : new FNameCurveKey(Ar),
@@ -116,7 +117,7 @@ public class FScriptStruct
             "IntVector" => type == ReadType.ZERO ? new FIntVector() : Ar.Read<FIntVector>(),
             "UintVector" => type == ReadType.ZERO ? new TIntVector3<uint>() : Ar.Read<TIntVector3<uint>>(),
             "IntVector4" => type == ReadType.ZERO ? new TIntVector4<int>() : Ar.Read<TIntVector4<int>>(),
-            "UintVector4" => type == ReadType.ZERO ? new TIntVector4<uint>() : Ar.Read<TIntVector4<uint>>(),
+            "UintVector4" or "Uint32Vector4" => type == ReadType.ZERO ? new TIntVector4<uint>() : Ar.Read<TIntVector4<uint>>(),
             "Int64Vector2" or "Int64Point" => type == ReadType.ZERO ? new TIntVector2<long>() : Ar.Read<TIntVector2<long>>(),
             "UInt64Vector2" or "UInt64Point" => type == ReadType.ZERO ? new TIntVector2<ulong>() : Ar.Read<TIntVector2<ulong>>(),
             "Int64Vector" => type == ReadType.ZERO ? new TIntVector3<long>() : Ar.Read<TIntVector3<long>>(),
@@ -215,6 +216,8 @@ public class FScriptStruct
             "DataCacheDuplicatedObjectData" => new FDataCacheDuplicatedObjectData(Ar),
             "EdGraphPinType" => new FEdGraphPinType(Ar),
             "ControlRigOverrideContainer" => type == ReadType.ZERO ? new FControlRigOverrideContainer() : new FControlRigOverrideContainer(Ar),
+            "ChaosClothSimulationLodModel" => type == ReadType.ZERO ? new FStructFallback() : new FChaosClothSimulationLodModel(Ar),
+            "ManagedArrayCollection" when FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.AddManagedArrayCollectionPropertySerialization=> type == ReadType.ZERO ? new FManagedArrayCollection() : new FManagedArrayCollection(new(Ar)),
 
             // Custom struct types for simple structs in tagged TMap
             "UInt32Property" => type == ReadType.ZERO ? new FRawUIntStruct() : Ar.Read<FRawUIntStruct>(),
@@ -226,6 +229,7 @@ public class FScriptStruct
             "FortActorRecord" => new FFortActorRecord(Ar),
             "GameplayEventFunction" => new FGameplayEventFunction(Ar),
             "GameplayEventDescriptor" => new FGameplayEventDescriptor(Ar),
+            "RemoteServerId" => Ar.Read<FRawUIntStruct>(),
 
             // Train Sim World
             "DistanceQuantity" => Ar.Read<FDistanceQuantity>(),

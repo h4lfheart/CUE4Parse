@@ -17,7 +17,7 @@ using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Exports.Wwise;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
-using CUE4Parse.UE4.CriWare.Readers;
+using CUE4Parse.UE4.Criware.Readers;
 using CUE4Parse.UE4.FMod;
 using CUE4Parse.UE4.FMod.Objects;
 using CUE4Parse.UE4.Kismet;
@@ -845,8 +845,17 @@ public class FPackageFileSummaryConverter : JsonConverter<FPackageFileSummary>
         writer.WritePropertyName(nameof(value.FileVersionLicenseeUE));
         writer.WriteValue(value.FileVersionLicenseeUE.ToStringBitfield());
 
-        writer.WritePropertyName("CustomVersions");
-        serializer.Serialize(writer, value.CustomVersionContainer?.Versions);
+        if (value.CustomVersionContainer is not null)
+        {
+            writer.WritePropertyName("CustomVersions");
+            serializer.Serialize(writer, value.CustomVersionContainer?.Versions);
+        }
+
+        if (value.TextureAllocations is not null)
+        {
+            writer.WritePropertyName("TextureAllocations");
+            serializer.Serialize(writer, value.TextureAllocations);
+        }
 
         writer.WritePropertyName(nameof(value.bUnversioned));
         writer.WriteValue(value.bUnversioned);
@@ -1748,7 +1757,7 @@ public class FSkeletalMaterialConverter : JsonConverter<FSkeletalMaterial>
         serializer.Serialize(writer, value.MaterialSlotName);
 
         writer.WritePropertyName("Material");
-        serializer.Serialize(writer, value.Material);
+        serializer.Serialize(writer, value.MaterialInterface);
 
         writer.WritePropertyName("ImportedMaterialSlotName");
         serializer.Serialize(writer, value.ImportedMaterialSlotName);
@@ -2621,6 +2630,12 @@ public class FAssetPackageDataConverter : JsonConverter<FAssetPackageData>
         {
             writer.WritePropertyName("CookedHash");
             serializer.Serialize(writer, value.CookedHash);
+        }
+
+        if (value.SourceFileMD5 != null)
+        {
+            writer.WritePropertyName("SourceFileMD5");
+            serializer.Serialize(writer, value.SourceFileMD5);
         }
 
         if (value.FileVersionUE.FileVersionUE4 != 0 || value.FileVersionUE.FileVersionUE5 != 0)

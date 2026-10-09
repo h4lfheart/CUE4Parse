@@ -84,7 +84,6 @@ public class FLevelSaveRecordArchive : FObjectAndNameAsStringProxyArchive
 [StructFallback]
 public class FActorTemplateRecord
 {
-
     public ulong ID;
     public FSoftObjectPath ActorClass;
     public FActorComponentRecord[] ActorComponents;
@@ -202,9 +201,9 @@ public class FActorTemplateRecord
     }
 }
 
+[StructFallback]
 public class FActorComponentRecord
 {
-
     public FName ComponentName;
     public FSoftObjectPath ComponentClass; // UClass
     public byte[]? ComponentData;
@@ -254,6 +253,15 @@ public class FActorComponentRecord
                 DataHash = 0;
             }
         }
+    }
+
+    public FActorComponentRecord(FStructFallback fallback)
+    {
+        ComponentName = fallback.GetOrDefault<FName>(nameof(ComponentName));
+        ComponentClass = fallback.GetOrDefault<FSoftObjectPath>(nameof(ComponentClass));
+        ComponentData = fallback.GetOrDefault<byte[]>(nameof(ComponentData));
+        DataHash = fallback.GetOrDefault<uint>(nameof(DataHash));
+        // there are also other properties, skip for now
     }
 }
 

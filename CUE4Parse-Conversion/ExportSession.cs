@@ -1,21 +1,24 @@
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using CUE4Parse.GameTypes.Nascar.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
+using CUE4Parse.UE4.Assets.Exports.Engine;
+using CUE4Parse.UE4.Assets.Exports.GeometryCollection;
+using CUE4Parse.UE4.Assets.Exports.Houdini;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.Rig;
-using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.Engine.Animation;
 using CUE4Parse_Conversion.Exporters;
+using CUE4Parse_Conversion.Exporters.Custom;
 using CUE4Parse_Conversion.Options;
-using CUE4Parse.UE4.Assets.Exports.GeometryCollection;
 
 namespace CUE4Parse_Conversion;
 
@@ -48,8 +51,11 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
         {
             UTexture texture => Add(new TextureExporter(texture)),
             UMaterialInterface material => Add(new MaterialExporter(material)),
-            USkeletalMesh skeletalMesh => Add(new SkeletalMeshExporter(skeletalMesh)),
+            USkinnedAsset skinnedAsset => Add(new SkinnedAssetExporter(skinnedAsset)),
             UStaticMesh staticMesh => Add(new StaticMeshExporter(staticMesh)),
+            UHoudiniAsset houdiniAsset => Add(new HoudiniAssetExporter(houdiniAsset)),
+            UHoudiniStaticMesh houdiniMesh => Add(new HoudiniStaticMeshExporter(houdiniMesh)),
+            UIRMesh irMesh => Add(new IRMeshExporter(irMesh)),
             UGeometryCollection geometryCollection => Add(new GeometryCollectionExporter(geometryCollection)),
             USkeleton skeleton => Add(new SkeletonExporter(skeleton)),
             UPoseAsset poseAsset => Add(new PoseAssetExporter(poseAsset)),

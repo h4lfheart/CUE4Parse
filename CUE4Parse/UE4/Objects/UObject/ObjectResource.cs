@@ -22,7 +22,7 @@ namespace CUE4Parse.UE4.Objects.UObject
     /// array index will be (-FPackageIndex - 1)
     /// </summary>
     [JsonConverter(typeof(FPackageIndexConverter))]
-    public class FPackageIndex : IEquatable<FPackageIndex>
+    public class FPackageIndex : ILoadableObject, IEquatable<FPackageIndex>
     {
         /// <summary>
         /// Values greater than zero indicate that this is an index into the ExportMap.  The
@@ -103,7 +103,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         protected internal void WriteJson(JsonWriter writer, JsonSerializer serializer)
         {
-            if (TryLoad<UProperty>(out var property))
+            if (this.TryLoad<UProperty>(out var property))
             {
                 serializer.Serialize(writer, property);
             }
@@ -115,27 +115,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         #region Loading Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T? Load<T>() where T : UExport => Owner?.FindObject(this)?.Value as T;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryLoad<T>([MaybeNullWhen(false)] out T export) where T : UExport
-        {
-            if (!TryLoad(out var genericExport) || genericExport is not T cast)
-            {
-                export = default;
-                return false;
-            }
-
-            export = cast;
-            return true;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<T> LoadAsync<T>() where T : UExport =>
-            await LoadAsync() as T ?? throw new ParserException($"Loaded {ToString()} but it was of wrong type");
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<T?> TryLoadAsync<T>() where T : UExport => await TryLoadAsync() as T;
+        public Type? GetObjectType() => ResolvedObject?.GetObjectType();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public UExport? Load() => ResolvedObject?.Load();
@@ -155,19 +135,14 @@ namespace CUE4Parse.UE4.Objects.UObject
         {
             if (ResolvedObject != null)
                 return await ResolvedObject.LoadAsync();
-            throw new ParserException($"{ToString()} could not be loaded");
+            return null;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<UExport?> TryLoadAsync()
         {
             if (ResolvedObject != null)
-            {
-                var loadedObj = await ResolvedObject.TryLoadAsync();
-                if (loadedObj != null)
-                    return loadedObj;
-            }
-
+                return await ResolvedObject.TryLoadAsync();
             return null;
         }
         #endregion
@@ -192,7 +167,7 @@ namespace CUE4Parse.UE4.Objects.UObject
     /// contained within the same package)
     /// </summary>
     [JsonConverter(typeof(FObjectResourceConverter))]
-    public abstract class FObjectResource : IObject
+    public abstract class FObjectResource
     {
         public FName ObjectName;
         public FPackageIndex? OuterIndex;
@@ -247,12 +222,28 @@ namespace CUE4Parse.UE4.Objects.UObject
             {
                 new FPackageIndex(Ar); // Archetype
             }
-            ObjectFlags = Ar.Read<uint>();
+
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.Use64BitFlag && Ar.Game < GAME_UE4_0)
+            {
+                Ar.Position += sizeof(ulong); // ulong - ObjectFlagsLegacy
+            }
+            else
+            {
+                ObjectFlags = Ar.Read<uint>();
+            }
 
             if (Ar.Ver < EUnrealEngineObjectUE4Version.e64BIT_EXPORTMAP_SERIALSIZES)
             {
                 SerialSize = Ar.Read<int>();
-                SerialOffset = Ar.Read<int>();
+
+                if (Ar.Game == GAME_RocketLeague && (int)Ar.LicenseeVer > 22)
+                {
+                    SerialOffset = Ar.Read<long>();
+                }
+                else if (SerialSize > 0 || Ar.Ver >= EUnrealEngineObjectUE3Version.MOVED_EXPORTIMPORTMAPS_ADDED_TOTALHEADERSIZE)
+                {
+                    SerialOffset = Ar.Read<int>();
+                }
             }
             else
             {
@@ -267,11 +258,9 @@ namespace CUE4Parse.UE4.Objects.UObject
                 NotForServer = Ar.ReadBoolean();
             }
 
-            PackageGuid = Ar.Ver < EUnrealEngineObjectUE5Version.REMOVE_OBJECT_EXPORT_PACKAGE_GUID ? Ar.Read<FGuid>() : default;
-            IsInheritedInstance = Ar.Ver >= EUnrealEngineObjectUE5Version.TRACK_OBJECT_EXPORT_IS_INHERITED && Ar.ReadBoolean();
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedComponentMapToExports && Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_COMPONENT_MAP)
             {
-                Ar.ReadMap(() => Ar.ReadFName(), () => new FPackageIndex(Ar)); // LegacyComponentMap
+                Ar.ReadMap(Ar.ReadFName, () => new FPackageIndex(Ar)); // LegacyComponentMap
             }
 
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.FOBJECTEXPORT_EXPORTFLAGS && Ar.Game < GAME_UE4_0)
@@ -285,6 +274,9 @@ namespace CUE4Parse.UE4.Objects.UObject
                 {
                     Ar.ReadArray<int>(); // NetObjectCount
                 }
+
+                PackageGuid = Ar.Ver < EUnrealEngineObjectUE5Version.REMOVE_OBJECT_EXPORT_PACKAGE_GUID ? Ar.Read<FGuid>() : default;
+                IsInheritedInstance = Ar.Ver >= EUnrealEngineObjectUE5Version.TRACK_OBJECT_EXPORT_IS_INHERITED && Ar.ReadBoolean();
 
                 if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedPackageFlags)
                 {

@@ -5,6 +5,8 @@ using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
+using CUE4Parse.GameTypes.DFHO.Assets.Objects;
+using CUE4Parse.GameTypes.Tencent.GangstarMirageCity.Objects.Meshes;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.StaticMesh;
@@ -108,22 +110,30 @@ public class FStaticMeshRenderData
 
             if (!stripped)
             {
-                for (var i = 0; i < LODs.Length; i++)
+                if (Ar.Game is GAME_DeltaForce)
                 {
-                    var bValid = Ar.ReadBoolean();
-                    if (bValid)
+                    FDeltaForceStaticMeshRenderData.SkipDistanceFields(Ar, LODs.Length);
+                }
+                else
+                {
+                    for (var i = 0; i < LODs.Length; i++)
                     {
-                        if (Ar.Game is >= GAME_UE5_0 or GAME_TerminullBrigade or GAME_WutheringWaves)
+                        var bValid = Ar.ReadBoolean();
+                        if (bValid)
                         {
-                            _ = new FDistanceFieldVolumeData5(Ar);
+                            if (Ar.Game is >= GAME_UE5_0 or GAME_TerminullBrigade or GAME_WutheringWaves)
+                            {
+                                _ = new FDistanceFieldVolumeData5(Ar);
+                            }
+                            else
+                            {
+                                _ = new FDistanceFieldVolumeData(Ar);
+                            }
                         }
-                        else
-                        {
-                            _ = new FDistanceFieldVolumeData(Ar);
-                        }
+
+                        if (Ar.Game is GAME_TheFinals or GAME_ArcRaiders)
+                            _ = Ar.ReadArray(() => new FDistanceFieldVolumeData5(Ar));
                     }
-                    if (Ar.Game is GAME_TheFinals or GAME_ArcRaiders)
-                        _ = Ar.ReadArray(() => new FDistanceFieldVolumeData5(Ar));
                 }
             }
         }
@@ -145,25 +155,41 @@ public class FStaticMeshRenderData
         }
 
         Bounds = new FBoxSphereBounds(Ar);
-
-        if (Ar.Game == GAME_RocoKingdomWorld)
+        switch (Ar.Game)
         {
-            foreach (var lod in LODs)
+            case GAME_GangstarMirageCity:
             {
-                if (lod.PositionVertexBuffer != null && lod.PositionVertexBuffer.Stride != 8) continue;
-                if (lod.PositionVertexBuffer?.Verts == null) continue;
-
-                var verts = lod.PositionVertexBuffer.Verts;
-                for (var i = 0; i < verts.Length; i++)
+                foreach (var lod in LODs)
                 {
-                    verts[i] =  verts[i] * Bounds.BoxExtent + Bounds.Origin;
+                    if (lod.PositionVertexBuffer is FGangstarPositionVertexBuffer positions)
+                    {
+                        positions.Decode(Bounds);
+                    }
                 }
+                break;
+            }
+            case GAME_RocoKingdomWorld:
+            {
+                foreach (var lod in LODs)
+                {
+                    if (lod.PositionVertexBuffer != null && lod.PositionVertexBuffer.Stride != 8)
+                        continue;
+                    if (lod.PositionVertexBuffer?.Verts == null)
+                        continue;
+
+                    var verts = lod.PositionVertexBuffer.Verts;
+                    for (var i = 0; i < verts.Length; i++)
+                    {
+                        verts[i] = verts[i] * Bounds.BoxExtent + Bounds.Origin;
+                    }
+                }
+                break;
             }
         }
 
         if (Ar.Versions["StaticMesh.HasLODsShareStaticLighting"])
         {
-            if (Ar.Game is >= GAME_UE5_6 or GAME_GrayZoneWarfare or GAME_HighOnLife2 or GAME_Gothic1Remake)
+            if (Ar.Game is >= GAME_UE5_6 or GAME_GrayZoneWarfare or GAME_HighOnLife2 or GAME_Gothic1Remake or GAME_TheBloodofDawnwalker)
             {
                 var bRenderDataFlags = Ar.Read<byte>();
                 bLODsShareStaticLighting = (bRenderDataFlags & 1) != 0;
@@ -184,13 +210,18 @@ public class FStaticMeshRenderData
             Ar.Position += 4; // MaxStreamingTextureFactor
         }
 
-        if (Ar.Game is GAME_DeltaForce or GAME_DeadzoneRogue) Ar.Position += 4;
+        if (Ar.Game is GAME_DeltaForce)
+        {
+            Bounds = FDeltaForceStaticMeshRenderData.DeserializeCustomData(Ar, LODs.Length);
+        }
+        if (Ar.Game is GAME_DeadzoneRogue) Ar.Position += 4;
         if (Ar.Game is GAME_InfinityNikki or GAME_RogueCompany) Ar.Position += 8;
 
         var screenSizeLength = Ar.Game switch
         {
             GAME_FragPunk or GAME_RocoKingdomWorld => 16,
             GAME_Stalker2 => 14,
+            GAME_TheBloodofDawnwalker => 2,
             >= GAME_UE4_9 => MAX_STATIC_LODS_UE4,
             _ => 4
         };

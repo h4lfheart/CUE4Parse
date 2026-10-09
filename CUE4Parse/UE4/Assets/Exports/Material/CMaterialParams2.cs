@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Objects.Core.Math;
-using Newtonsoft.Json;
+using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Assets.Exports.Material;
 
@@ -46,9 +46,9 @@ public class CMaterialParams2
         [
             "Trunk_BaseColor", "ShadedDiffuse", "LitDiffuse", "Base Colour", "CLRM", "Diffuse_Map", "Base Color", "Base_Tex", "BaseTex", "ColorTexture",
             "Background Diffuse", "BG Diffuse Texture", "Diffuse", "Diffuse_1", "DiffuseTexture", "DiffuseMap", "Diffuse A", "Base Color Map", "DesatTexture",
-            "Diffuse A Map", "Diffuse Top", "Diffuse Side", "Base Diffuse", "Diffuse Base", "Diffuse Base Map", "Diffuse Color Map", "BaseColor_Tex",
+            "Diffuse A Map", "Diffuse Top", "Diffuse Side", "Base Diffuse", "Diffuse Base", "Diffuse Base Map", "Diffuse Color Map", "BaseColor_Tex", "UDR",
             "DiffuseLayer1", "1 - Albedo", "albedo", "Albedo", "Aldebo", "ALB", "TextureAlbedo", "AlbedoTex", "Color_Texture", "color", "Base_D", "Tex_BaseColor",
-            "AlbedoColour", "BCR", "Base Texture",
+            "AlbedoColour", "BCR", "Base Texture", "BaseColour", "Color Map", "Base Color - Texture",
             "Base Color Texture", "BaseColorTexture", "BaseColor_Texture", "Base_Color", "BaseColor", "Basecolor", "Tex_BC", "TexA_BC", "BaseDiffuse",
             "Base Texture Color", "BaseColorA", "BC", "BCA", "BC_Map", "Base Map", "BCE", "Color", "CO", "CO_", "CO_1", "Base_CO", "Base Color + Linework", "Bc",
             "BaseColorVT", "Tex_Color", "Color Tex", "TexColor", "AlbedMap", "Tex_Colormap", "ColorMap", "Main_T_BaseColor", "BaseColour", "Base_Texture",
@@ -58,7 +58,8 @@ public class CMaterialParams2
             "Simple_BaseColor_Texture", "AlbedoTexture", "Albedo Texture", "BC_LUT", "BCO", "CR", "C/R" /*Finals*/, "BaseColor_Tex(a:mask)", "Base Color Map VT",
             "Basecolor_VT", "BaseColor_Map", "BaceColor_Map", "ColorAo", "RGBMask", "Color & Alpha", "BaseColor - Texture", "Clothing Diffuse",
             "Base Color [Standard]", "Base Color VT", "BaseColorRoughness", "BaseColorAlpha", "Color Map (Packed)", "D(ID)", "BC Texture (BC/BCO)",
-            "BCM BaseColor|Metallic Map", "Color_Main", "Texture_BC", "Virtual Texture Base Color", "DF", "L01.BaseColor"
+            "BCM BaseColor|Metallic Map", "Color_Main", "Texture_BC", "Virtual Texture Base Color", "DF", "L01.BaseColor", "BCM", "WGAD_Map", "OSGB",
+            "Decal Base Color & Alpha",
         ],
         ["Background Diffuse 2", "Diffuse_Texture_2", "DiffuseLayer2", "Diffuse B", "Diffuse B Map", "BaseColorB", "CO_2", "M2_T_BC"],
         ["Background Diffuse 3", "Diffuse_Texture_3", "DiffuseLayer3", "Diffuse C", "Diffuse C Map", "BaseColorC", "CO_3", "M3_T_BC"],
@@ -72,7 +73,7 @@ public class CMaterialParams2
     public static readonly string[][] Normals =
     [
         [
-            "Trunk_Normal", "T_Normal", "normal", "normalmap", "NRRO", "Base Normal", "BaseNormalMap", "Normal Map",
+            "Trunk_Normal", "T_Normal", "normal", "normalmap", "NRRO", "Base Normal", "BaseNormalMap", "Normal Map", "Base Normal Map",
             "Normals", "Normal", "NormalA", "NormalTexture", "Normal Texture", "Normal_Texture", "NormalMap", "Normal Tex",
             "Normal A Map", "Normals Top", "Normals Side", "Fallback Normal", "Base_N", "BaseNormal_Tex", "BaseNormal_NonVT",
             "Base_Normal", "BaseNormal", "Normal Base", "NormalVT", "TextureNormal", "Tex_BakedNormal", "TexNor", "Normal VT",
@@ -82,7 +83,7 @@ public class CMaterialParams2
             "Primary Normal Map", "ORN" /*ABI*/, "NRO_Base_Normal", "Layer00_Normal_Tex", "Tex_SkinBase_N", "Tex_Core_Layer_Normal",
             "Simple_Normal_Texture", "BaseNormal Texture", "NOH", "N/O/H", "NMH", "NWO" /*Finals*/, "Normal_VT", "NRM_Map",
             "Normal - Texture", "Clothing Normal", "Normal [Standard]", "NCD_Mask", "Normal Map (Packed)", "N2R(M)", "Normal Texture (N)",
-            "Normal(HrNM)_Texture", "VT Normal", "L01.Normal.Metallic.Roughness"
+            "Normal(HrNM)_Texture", "VT Normal", "L01.Normal.Metallic.Roughness", "NRA"
         ],
         ["Normals_Texture_2", "Texture B Normal", "NormalB", "Normal B Map", "NM_2", "M2_T_NRM"],
         ["Normals_Texture_3", "Texture C Normal", "NormalC", "Normal C Map", "NM_3", "M3_T_NRM"],
@@ -100,11 +101,11 @@ public class CMaterialParams2
             "SpecularMasks", "Specular", "SpecMap", "T_Specular", "Specular Top", "Specular Side",
             "MG", "ORM", "MRAE", "MRAS", "MRAO", "MRA", "MRAO_Map", "MRA A", "MRS", "LP", "LP_1", "Base_LP", "Base_R*", "MRO_Tex",
             "TextureRMA", "Tex_MultiMask", "Tex_Multi", "TexMRC", "TexMRA", "TexRCN", "MultiMaskMap", "MRO Map", "MROA Map", "MRO",
-            "Base_SRO", "Base Texture RMAO", "Skin SRXO", "SRXO_Mask", "SRXO", "SROA", "SR", "SRO Map", "SRM", "SC_Map", "AO",
+            "Base_ORM", "Base_SRO", "Base Texture RMAO", "Skin SRXO", "SRXO_Mask", "SRXO", "SROA", "SR", "SRO Map", "SRM", "SC_Map", "AO",
             "Pack", "PAK", "T_PAK", "M1_T_PAK", "2 - Packed mask (MRAO)", "RoughnessMaterial_Mask", "Packed Tex", "Packed Texture",
             "Cliff Spec Texture", "PhysicalMap", "KizokMap", "Roughness_MAIN", "Main_T_MGA", "Tex_CH", "TexA_CH", "ARMMap", "REM",
             "Primary ARME", "CombineTex(HRA)", "ORN", "TPA_SpecColorTex", "Tex_RME", "CompVT", "MetalRoughOcc_Tex",
-            "Layer00_MetalRoughOccDp_Tex", "Tex_SkinBase_ORM", "Tex_Core_Layer_AO", "RGB[AO/R/Metallic]_Texture",
+            "Layer00_MetalRoughOccDp_Tex", "Tex_SkinBase_ORM", "Tex_Core_Layer_AO", "RGB[AO/R/Metallic]_Texture", "MRO - Texture",
             "Simple_OcclRoughMet_Texture", "P (NoneVT)", "Pack Tex1", "CASR", "Roughness_VT", "OcclusionRoughnessMetallicTexture",
             "Clothing ORM", "ORC [Standard]", "ORME_Tex", "Roughness VT", "RMAO VT", "Mix(AO,Rough,Mask,Metal)", "Texture_S",
             "MetallicRoughnessOcclusionSpecularTexture", "Virtual Texture ORM", "L01.Normal.Metallic.Roughness"
@@ -162,42 +163,41 @@ public class CMaterialParams2
         ["Emissive7", "Color07"]
     ];
 
-    [JsonIgnore]
-    public readonly Dictionary<string, UUnrealMaterial> Textures = [];
+    public readonly Dictionary<string, ILoadableObject> Textures = [];
     public readonly Dictionary<string, FLinearColor> Colors = [];
     public readonly Dictionary<string, float> Scalars = [];
     public readonly Dictionary<string, bool> Switches = [];
     public readonly Dictionary<string, object?> Properties = [];
 
-    public IEnumerable<UUnrealMaterial> GetTextures(IEnumerable<string> names)
+    public IEnumerable<UTexture> GetTextures(IEnumerable<string> names)
     {
         foreach (string name in names)
         {
-            if (Textures.TryGetValue(name, out var y))
-                yield return y;
+            if (Textures.TryGetValue(name, out var y) && y.TryLoad<UTexture>(out var t))
+                yield return t;
         }
     }
 
-    public IEnumerable<UUnrealMaterial?> GetTexturesOrNull(IEnumerable<string> names)
+    public IEnumerable<UTexture?> GetTexturesOrNull(IEnumerable<string> names)
     {
         foreach (string name in names)
         {
-            if (Textures.TryGetValue(name, out var y))
-                yield return y;
+            if (Textures.TryGetValue(name, out var y) && y.TryLoad<UTexture>(out var t))
+                yield return t;
             else yield return null;
         }
     }
 
-    public IEnumerable<UUnrealMaterial> GetTexturesByRegex(Regex regex)
+    public IEnumerable<UTexture> GetTexturesByRegex(Regex regex)
     {
-        foreach ((string key, UUnrealMaterial value) in Textures)
-            if (regex.IsMatch(key))
-                yield return value;
+        foreach ((string key, ILoadableObject value) in Textures)
+            if (regex.IsMatch(key) && value.TryLoad<UTexture>(out var t))
+                yield return t;
     }
 
     public bool TryGetFirstTexture2d(out UTexture? texture)
     {
-        if (Textures.FirstOrDefault() is { Value: UTexture texture2D })
+        if (Textures.Count > 0 && Textures.First().Value.TryLoad<UTexture>(out var texture2D))
         {
             texture = texture2D;
             return true;
@@ -249,7 +249,7 @@ public class CMaterialParams2
     {
         foreach (var name in names)
         {
-            if (Textures.TryGetValue(name, out var unrealMaterial) && unrealMaterial is UTexture texture2d)
+            if (Textures.TryGetValue(name, out var ptr) && ptr.TryLoad<UTexture>(out var texture2d))
             {
                 texture = texture2d;
                 return true;
@@ -323,7 +323,7 @@ public class CMaterialParams2
         }
     }
 
-    public bool VerifyTexture(string name, UTexture texture, bool appendToDictionary = true, EMaterialSamplerType samplerType = EMaterialSamplerType.SAMPLERTYPE_Color)
+    public bool VerifyTexture(string name, ILoadableObject texture, bool appendToDictionary = true, EMaterialSamplerType samplerType = EMaterialSamplerType.SAMPLERTYPE_Color)
     {
         var fallback = "";
         if (Regex.IsMatch(name, RegexDiffuse, RegexOptions.IgnoreCase))
