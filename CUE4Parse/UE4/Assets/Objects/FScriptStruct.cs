@@ -127,7 +127,7 @@ public class FScriptStruct
             "LevelSequenceObjectReferenceMap" => type == ReadType.ZERO ? new FLevelSequenceObjectReferenceMap() : new FLevelSequenceObjectReferenceMap(Ar),
             "LinearColor" => type == ReadType.ZERO ? new FLinearColor() : Ar.Read<FLinearColor>(),
             "NiagaraVariable" => new FNiagaraVariable(Ar),
-            "NiagaraVariableBase" or "NiagaraDataChannelVariable" => new FNiagaraVariableBase(Ar),
+            "NiagaraVariableBase" or "NiagaraDataChannelVariable" => new FNiagaraVariableBase(Ar, structName),
             "NiagaraVariableWithOffset" => new FNiagaraVariableWithOffset(Ar),
             "NiagaraDataInterfaceGPUParamInfo" => new FNiagaraDataInterfaceGPUParamInfo(Ar),
             "MaterialOverrideNanite" => type == ReadType.ZERO ? new FMaterialOverrideNanite() : new FMaterialOverrideNanite(Ar),
@@ -420,6 +420,8 @@ public class FScriptStruct
 
             // Cloudheim
             "NamedGuid" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+
+            "FP32" when Ar.Game is GAME_MarchofGiants => type == ReadType.ZERO ? new FStructFallback() : new FStructFallback(Ar, structName, new FRawHeader([(0, 2)], ERawHeaderFlags.Reverse | ERawHeaderFlags.RawProperties), ReadType.RAW),
 
             "PackedNormal" when Ar.Game is GAME_TheDivisionResurgence => new FPackedNormal(Ar),
 
