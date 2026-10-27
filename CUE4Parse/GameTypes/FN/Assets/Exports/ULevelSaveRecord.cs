@@ -166,13 +166,13 @@ public class FActorTemplateRecord
 
         try
         {
-            using var Ar = new FAssetArchive(new FByteArchive("ActorData Reader", ActorData, versions), owner);
+            using var Ar = new FAssetArchive(new FByteArchive("ActorData Reader", ActorData, (VersionContainer) versions.Clone()), owner);
             var flags = owner.Summary.PackageFlags;
             owner.Summary.PackageFlags &= ~EPackageFlags.PKG_UnversionedProperties;
             var props = bUsingRecordDataReferenceTable
                 ? ReadReferenceTableActorData(new FObjectAndNameAsStringProxyArchive(Ar))
-                : new FStructFallback(new FLevelSaveRecordArchive(Ar, SaveVersion));
-            owner.Summary.PackageFlags = flags; // restore flags
+                : ReadLegacyActorData(new FLevelSaveRecordArchive(Ar, SaveVersion));
+            owner.Summary.PackageFlags = flags;
             return props;
         }
         catch
@@ -180,7 +180,16 @@ public class FActorTemplateRecord
             return new FStructFallback();
         }
     }
-    
+
+    private static FStructFallback ReadLegacyActorData(FAssetArchive Ar)
+    {
+        Ar.Ver = new FPackageFileVersion(
+            (int) EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION,
+            (int) EUnrealEngineObjectUE5Version.SCRIPT_SERIALIZATION_OFFSET);
+        
+        return new FStructFallback(Ar);
+    }
+
     private FStructFallback ReadReferenceTableActorData(FAssetArchive Ar)
     {
         var magic = Ar.Read<uint>(); // E9 9D 18 A2
@@ -188,10 +197,12 @@ public class FActorTemplateRecord
         var fileVersionUE5 = Ar.Read<EUnrealEngineObjectUE5Version>();
         var engineVersion = new FEngineVersion(Ar);
         
+        Ar.Ver = new FPackageFileVersion((int) fileVersionUE4, (int) fileVersionUE5);
+
         Ar.Position += sizeof(int); // -1
         Ar.Position += 2; // 01 03
 
-        var guidPairCount =  Ar.Read<uint>();
+        var guidPairCount = Ar.Read<uint>();
         Ar.Position += guidPairCount * (FGuid.Size + sizeof(uint));
 
         var structFallback = new FStructFallback();
