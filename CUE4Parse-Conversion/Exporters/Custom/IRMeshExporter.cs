@@ -1,11 +1,14 @@
 using CUE4Parse.GameTypes.Nascar.Assets.Exports;
 using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Formats.Meshes;
+using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse_Conversion.Exporters.Custom;
 
 public sealed class IRMeshExporter(UIRMesh originalMesh) : MeshExporter<UIRMesh>(originalMesh)
 {
+    protected override IEnumerable<FPackageIndex?> MaterialReferences => Mesh.Materials;
+
     protected override IReadOnlyList<ExportFile> BuildFiles(UIRMesh originalMesh, IMeshExportFormat format)
     {
         var result = new List<ExportFile>();
@@ -13,7 +16,7 @@ public sealed class IRMeshExporter(UIRMesh originalMesh) : MeshExporter<UIRMesh>
         {
             try
             {
-                var part = new StaticMeshDto(originalMesh, i);
+                var part = new StaticMeshDto(originalMesh, i, Session.Options);
                 var exportFiles = format.BuildStaticMesh(ObjectName, ObjectPath, Session.Options, part, EnqueueMaterials(part.Materials));
                 result.AddRange(exportFiles.Select(exportFile => exportFile with { NameSuffix = $"_{i}" }));
             }

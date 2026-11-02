@@ -13,6 +13,7 @@ public class ULightComponentBase : USceneComponent
     public float Intensity { get; protected set; } = MathF.PI;
     public FColor LightColor { get; private set; } = new(255, 255, 255, 255);
     public bool CastShadows { get; private set; } = true;
+    public bool bAffectsWorld { get; private set; } = true;
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
@@ -21,6 +22,7 @@ public class ULightComponentBase : USceneComponent
         Intensity = GetOrDefault(nameof(Intensity), Intensity);
         LightColor = GetOrDefault(nameof(LightColor), LightColor);
         CastShadows = GetOrDefault(nameof(CastShadows), CastShadows);
+        bAffectsWorld = GetOrDefault(nameof(bAffectsWorld), bAffectsWorld);
 
         if (Ar.Ver < EUnrealEngineObjectUE4Version.INVERSE_SQUARED_LIGHTS_DEFAULT)
         {
@@ -30,7 +32,7 @@ public class ULightComponentBase : USceneComponent
 
     public FLinearColor GetLightColor()
     {
-        return new FLinearColor(LightColor.R / 255.0f, LightColor.G / 255.0f, LightColor.B / 255.0f, LightColor.A / 255.0f);
+        return new FLinearColor(LightColor);
     }
 
     public virtual float GetNitIntensity() => Intensity;
